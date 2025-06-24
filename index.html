@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ana Sayfa - Konya Bilim Merkezi Bakım Takip Sistemi</title>
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="styles.css" rel="stylesheet">
+    <style>
+        .navbar-brand {
+            font-weight: 600;
+        }
+        .welcome-banner {
+            background: linear-gradient(135deg, #1e88e5 0%, #1976d2 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+        .stats-container {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .stat-item {
+            text-align: center;
+            padding: 1rem;
+        }
+        .stat-item i {
+            font-size: 2rem;
+            color: #1e88e5;
+            margin-bottom: 0.5rem;
+        }
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .stat-label {
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <i class="bi bi-building-gear"></i>
+                Sergi Birimi Bakım Takip
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="index.html">
+                            <i class="bi bi-house-fill"></i> Ana Sayfa
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="galleries.html">
+                            <i class="bi bi-grid-fill"></i> Galeriler
+                        </a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center">
+                    <div class="text-light me-3">
+                        <i class="bi bi-person-circle"></i>
+                        <span id="userInfo"></span>
+                    </div>
+                    <button onclick="logout()" class="btn btn-outline-light">
+                        <i class="bi bi-box-arrow-right"></i> Çıkış Yap
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="welcome-banner">
+        <div class="container">
+            <h1>Hoş Geldiniz</h1>
+            <p>Konya Bilim Merkezi Sergi Birimi Bakım Takip Sistemine hoş geldiniz.</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="stats-container">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="stat-item">
+                        <i class="bi bi-grid-3x3-gap-fill"></i>
+                        <div class="stat-value" id="totalGalleries">-</div>
+                        <div class="stat-label">Toplam Galeri</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-item">
+                        <i class="bi bi-box-fill"></i>
+                        <div class="stat-value" id="totalUnits">-</div>
+                        <div class="stat-label">Toplam Ünite</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-item">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <div class="stat-value" id="faultyUnitsCount">-</div>
+                        <div class="stat-label">Arızalı Ünite</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-item">
+                        <i class="bi bi-tools"></i>
+                        <div class="stat-value" id="maintenanceCount">-</div>
+                        <div class="stat-label">Aylık Bakım</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-exclamation-circle-fill"></i> Arızalı Üniteler
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="faultyUnits">
+                            <p class="text-muted">Yükleniyor...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-clock-history"></i> Son Bakımlar
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="recentMaintenance">
+                            <p class="text-muted">Yükleniyor...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JS -->
+    <script src="firebase-config.js"></script>
+    <script src="auth.js"></script>
+    <script src="script.js"></script>
+</body>
+</html> 

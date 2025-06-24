@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giriş - Konya Bilim Merkezi Bakım Takip Sistemi</title>
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        .login-container {
+            margin-top: 5%;
+        }
+        .system-title {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #2c3e50;
+            font-size: 1.75rem;
+            font-weight: bold;
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        .card-body {
+            padding: 2.5rem;
+        }
+        .form-control {
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+        }
+        .btn-primary {
+            border-radius: 10px;
+            padding: 0.75rem;
+            font-weight: 600;
+            background-color: #1e88e5;
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: #1976d2;
+        }
+        .footer-text {
+            text-align: center;
+            margin-top: 2rem;
+            color: #6c757d;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 1rem;
+        }
+        .loading .spinner-border {
+            width: 1.5rem;
+            height: 1.5rem;
+            margin-right: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container login-container">
+        <div class="row justify-content-center">
+            <div class="col-md-5">
+                <h1 class="system-title">Konya Bilim Merkezi<br>Sergi Birimi Bakım Takip Sistemi</h1>
+                <div class="card">
+                    <div class="card-body">
+                        <h3 class="text-center mb-4">Personel Girişi</h3>
+                        <div id="loginError" class="alert alert-danger d-none"></div>
+                        <form id="loginForm">
+                            <div class="mb-4">
+                                <label for="email" class="form-label">Kurumsal E-posta</label>
+                                <input type="email" class="form-control" id="email" placeholder="ornek@kbm.org.tr" required>
+                            </div>
+                            <div class="mb-4">
+                                <label for="password" class="form-label">Şifre</label>
+                                <input type="password" class="form-control" id="password" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100" id="loginButton">
+                                Giriş Yap
+                            </button>
+                            <div class="loading" id="loading">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Yükleniyor...</span>
+                                </div>
+                                <span>Giriş yapılıyor...</span>
+                            </div>
+                        </form>
+                        <div class="mt-4">
+                            <p class="text-muted small">Test Hesapları:</p>
+                            <ul class="text-muted small">
+                                <li>Admin: admin@kbm.org.tr / Admin123!</li>
+                                <li>Yönetici: manager@kbm.org.tr / Manager123!</li>
+                                <li>Teknisyen: tech@kbm.org.tr / Tech123!</li>
+                                <li>Personel: staff@kbm.org.tr / Staff123!</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer-text">
+                    © 2024 Konya Bilim Merkezi - Tüm hakları saklıdır.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    
+    <!-- Firebase Config -->
+    <script src="firebase-config.js"></script>
+    
+    <!-- Auth JS -->
+    <script src="auth.js"></script>
+    
+    <script>
+        const loginForm = document.getElementById('loginForm');
+        const loginButton = document.getElementById('loginButton');
+        const loadingDiv = document.getElementById('loading');
+        const errorDiv = document.getElementById('loginError');
+
+        // Giriş işlemi
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            // UI'ı güncelle
+            loginButton.disabled = true;
+            loadingDiv.style.display = 'block';
+            errorDiv.classList.add('d-none');
+            
+            try {
+                await login(email, password);
+            } catch (error) {
+                console.error('Giriş hatası:', error);
+                errorDiv.textContent = error.message || 'Giriş yapılırken bir hata oluştu.';
+                errorDiv.classList.remove('d-none');
+            } finally {
+                loginButton.disabled = false;
+                loadingDiv.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html> 

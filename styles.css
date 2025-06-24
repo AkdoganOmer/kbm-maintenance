@@ -1,0 +1,127 @@
+.gallery-card {
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out;
+}
+
+.gallery-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.stat-box {
+    padding: 10px;
+    border-radius: 5px;
+    margin: 5px 0;
+}
+
+.total-units {
+    background-color: #e3f2fd;
+}
+
+.faulty-units {
+    background-color: #ffebee;
+}
+
+.card-title {
+    color: #2196F3;
+    font-weight: bold;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.stat-value {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #333;
+}
+
+/* Clickable table row styles */
+#galleriesTable tr, #unitsTable tr {
+    transition: background-color 0.2s ease;
+}
+
+#galleriesTable tr:hover, #unitsTable tr:hover {
+    background-color: #f8f9fa;
+}
+
+/* Unit details styles */
+.unit-image {
+    max-width: 100%;
+    margin-bottom: 1rem;
+}
+
+.unit-image img {
+    max-width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.technical-details {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 4px;
+    white-space: pre-wrap;
+    font-family: monospace;
+    margin: 0;
+}
+
+#imagePreview .unit-image {
+    display: inline-block;
+    margin: 0.5rem;
+    max-width: 200px;
+}
+
+#unitImages .unit-image {
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+#unitImages img {
+    max-height: 300px;
+    width: auto;
+    margin: 0 auto;
+}
+
+/* Technical Documents styles */
+.document-item {
+    padding: 0.5rem;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.document-item:hover {
+    background-color: #f8f9fa;
+}
+
+.document-item i {
+    font-size: 1.2rem;
+}
+
+.document-item a {
+    color: #333;
+}
+
+.document-item a:hover {
+    color: #0d6efd;
+}
+
+.document-item small {
+    color: #6c757d;
+}
+
+#documentList .document-item {
+    border: 1px solid #dee2e6;
+    margin-bottom: 0.5rem;
+}
+
+.pdf-viewer {
+    background-color: #f8f9fa;
+    overflow: hidden;
+}
+
+.pdf-viewer object {
+    border: none;
+} 

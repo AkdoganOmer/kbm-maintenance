@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galeri Yönetimi - Bilim Merkezi Bakım Takip</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="styles.css" rel="stylesheet">
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    
+    <!-- Firebase Config -->
+    <script src="firebase-config.js"></script>
+    
+    <!-- Auth -->
+    <script src="auth.js"></script>
+    
+    <!-- Custom JS -->
+    <script src="galleries-admin.js"></script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-building-gear"></i>
+                Sergi Birimi Bakım Takip
+            </a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Ana Sayfa</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="galleries.html">Galeri Yönetimi</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Gallery Section -->
+        <div id="gallerySection">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Galeriler</h2>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addGalleryModal">
+                    <i class="bi bi-plus-circle"></i> Yeni Galeri Ekle
+                </button>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Galeri Adı</th>
+                            <th>Toplam Ünite</th>
+                            <th>Arızalı Ünite</th>
+                            <th>İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody id="galleriesTable">
+                        <!-- Gallery rows will be added here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Units Section (initially hidden) -->
+        <div id="unitsSection" style="display: none;">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 id="selectedGalleryName">Galeriler</h2>
+                <div>
+                    <button class="btn btn-secondary me-2" onclick="showGallerySection()">
+                        <i class="bi bi-arrow-left"></i> Geri
+                    </button>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUnitModal">
+                        <i class="bi bi-plus-circle"></i> Yeni Ünite Ekle
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Ünite Adı</th>
+                            <th>Durum</th>
+                            <th>Son Bakım</th>
+                            <th>İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody id="unitsTable">
+                        <!-- Unit rows will be added here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Gallery Modal -->
+    <div class="modal fade" id="addGalleryModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Yeni Galeri Ekle</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addGalleryForm">
+                        <div class="mb-3">
+                            <label for="galleryName" class="form-label">Galeri Adı</label>
+                            <input type="text" class="form-control" id="galleryName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="galleryDescription" class="form-label">Açıklama</label>
+                            <textarea class="form-control" id="galleryDescription" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="button" class="btn btn-primary" onclick="addGallery()">Ekle</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Gallery Modal -->
+    <div class="modal fade" id="editGalleryModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Galeri Düzenle</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editGalleryForm">
+                        <input type="hidden" id="editGalleryId">
+                        <div class="mb-3">
+                            <label for="editGalleryName" class="form-label">Galeri Adı</label>
+                            <input type="text" class="form-control" id="editGalleryName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editGalleryDescription" class="form-label">Açıklama</label>
+                            <textarea class="form-control" id="editGalleryDescription" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="button" class="btn btn-primary" onclick="updateGallery()">Güncelle</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Unit Modal -->
+    <div class="modal fade" id="addUnitModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Yeni Ünite Ekle</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addUnitForm">
+                        <div class="mb-3">
+                            <label for="unitName" class="form-label">Ünite Adı</label>
+                            <input type="text" class="form-control" id="unitName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="unitDescription" class="form-label">Açıklama</label>
+                            <textarea class="form-control" id="unitDescription" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="button" class="btn btn-primary" onclick="addUnit()">Ekle</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Unit Modal -->
+    <div class="modal fade" id="editUnitModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Ünite Düzenle</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editUnitForm">
+                        <input type="hidden" id="editUnitId">
+                        <div class="mb-3">
+                            <label for="editUnitName" class="form-label">Ünite Adı</label>
+                            <input type="text" class="form-control" id="editUnitName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editUnitDescription" class="form-label">Açıklama</label>
+                            <textarea class="form-control" id="editUnitDescription" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editUnitStatus" class="form-label">Durum</label>
+                            <select class="form-select" id="editUnitStatus">
+                                <option value="Çalışıyor">Çalışıyor</option>
+                                <option value="Arızalı">Arızalı</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="button" class="btn btn-primary" onclick="updateUnit()">Kaydet</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Firebase'i başlat ve galeriler sayfasını yükle
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeFirebaseApp();
+            initializeGalleries();
+        });
+    </script>
+</body>
+</html> 
