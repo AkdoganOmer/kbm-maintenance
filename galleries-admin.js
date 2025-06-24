@@ -37,9 +37,19 @@ function initializeGalleries() {
         const showUnitsForGallery = urlParams.get('showUnits');
 
         // Oturum durumunu kontrol et
-        firebase.auth().onAuthStateChanged((user) => {
+        firebase.auth().onAuthStateChanged(async (user) => {
             if (user) {
                 console.log('Oturum açık:', user.email);
+                
+                // Kullanıcı rolünü kontrol et
+                const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+                if (!currentUser || !['admin', 'manager', 'technician'].includes(currentUser.role)) {
+                    console.log('Yetkisiz erişim');
+                    alert('Bu sayfaya erişim yetkiniz yok!');
+                    window.location.href = 'index.html';
+                    return;
+                }
+
                 // Galeriler koleksiyonunu dinle
                 listenToGalleries(showUnitsForGallery);
             } else {
@@ -173,13 +183,15 @@ function updateGalleriesTable(galleries) {
     });
 }
 
-// Check if user is admin
-function checkAdminAccess() {
-    const username = localStorage.getItem('username');
-    if (username !== 'admin') {
+// Check if user has required role
+function checkUserAccess() {
+    const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+    if (!currentUser || !['admin', 'manager', 'technician'].includes(currentUser.role)) {
         alert('Bu sayfaya erişim yetkiniz yok!');
         window.location.href = 'index.html';
+        return false;
     }
+    return true;
 }
 
 // Get galleries from Firestore
@@ -728,6 +740,6 @@ function formatDate(dateString) {
 
 // Initialize page
 document.addEventListener('DOMContentLoaded', () => {
-    checkAdminAccess();
+    checkUserAccess();
     initializeGalleries();
 }); 
