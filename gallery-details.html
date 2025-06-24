@@ -53,15 +53,40 @@
     
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     
-    <!-- Firebase Configuration -->
-    <script src="firebase-config.js"></script>
+    <!-- Firebase Config -->
+    <script>
+        // Firebase yapılandırması
+        const firebaseConfig = {
+            apiKey: "AIzaSyC-q-7B2IVQDRdNmUJ5K_UT-Tp2j1gZHIk",
+            authDomain: "sergi-bakim-onarim.firebaseapp.com",
+            projectId: "sergi-bakim-onarim",
+            storageBucket: "sergi-bakim-onarim.appspot.com",
+            messagingSenderId: "998277420747",
+            appId: "1:998277420747:web:663a465d9e198a2fadad4e",
+            measurementId: "G-7D0P08YB4W"
+        };
+
+        // Firebase'i başlat
+        if (firebase.apps.length === 0) {
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        // Firestore referansını al
+        const db = firebase.firestore();
+
+        // Firestore ayarları
+        db.settings({
+            merge: true
+        });
+    </script>
     
     <!-- Auth JS -->
-    <script defer src="auth.js"></script>
+    <script src="auth.js"></script>
     
-    <!-- Custom JS -->
-    <script defer src="gallery-details.js"></script>
+    <!-- Gallery Details JS -->
+    <script src="gallery-details.js"></script>
 </body>
 </html> 
