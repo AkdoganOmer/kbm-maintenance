@@ -6,13 +6,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
         // Firebase'in yüklenmesini bekle
         await new Promise((resolve) => {
-            if (window.db) {
+            if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
                 resolve();
                 return;
             }
 
             const checkFirebase = setInterval(() => {
-                if (window.db) {
+                if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
                     clearInterval(checkFirebase);
                     resolve();
                 }
@@ -76,7 +76,7 @@ function listenToGalleries(showUnitsForGallery = null) {
         }
 
         // Yeni dinleyici ekle
-        unsubscribeGalleries = window.db.collection('galleries')
+        unsubscribeGalleries = firebase.firestore().collection('galleries')
             .orderBy('createdAt', 'desc')
             .onSnapshot((snapshot) => {
                 console.log('Galeriler güncellendi');
@@ -196,15 +196,10 @@ function checkUserAccess() {
 
 // Get galleries from Firestore
 async function getGalleries() {
-    if (!window.db) {
-        console.error('Firebase henüz başlatılmadı');
-        return [];
-    }
-
     const galleries = [];
     try {
         // Galeriler koleksiyonunu çek
-        const snapshot = await window.db.collection('galleries')
+        const snapshot = await firebase.firestore().collection('galleries')
             .orderBy('createdAt', 'desc')
             .get();
 
@@ -218,17 +213,14 @@ async function getGalleries() {
                 totalUnits: data.totalUnits || 0,
                 faultyUnits: data.faultyUnits || 0,
                 createdAt: data.createdAt,
-                updatedAt: data.updatedAt
+                updatedAt: data.updatedAt,
+                units: data.units || []
             });
         });
-
-        console.log('Galeriler başarıyla yüklendi:', galleries);
-        return galleries;
     } catch (error) {
         console.error('Galeriler alınırken hata:', error);
-        alert('Galeriler alınırken bir hata oluştu: ' + error.message);
-        return [];
     }
+    return galleries;
 }
 
 // Save gallery to Firestore
@@ -236,10 +228,10 @@ async function saveGallery(gallery) {
     try {
         if (gallery.id) {
             // Update existing gallery
-            await window.db.collection('galleries').doc(gallery.id.toString()).set(gallery);
+            await firebase.firestore().collection('galleries').doc(gallery.id.toString()).set(gallery);
         } else {
             // Add new gallery
-            await window.db.collection('galleries').add(gallery);
+            await firebase.firestore().collection('galleries').add(gallery);
         }
     } catch (error) {
         console.error('Galeri kaydedilirken hata:', error);
@@ -324,7 +316,7 @@ async function displayGalleries() {
 
 // Add new gallery
 async function addGallery() {
-    if (!window.db) {
+    if (!typeof firebase !== 'undefined' && firebase.apps.length > 0) {
         console.error('Firebase henüz başlatılmadı');
         alert('Sistem hazır değil, lütfen sayfayı yenileyin');
         return;
@@ -348,7 +340,7 @@ async function addGallery() {
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         };
 
-        const docRef = await window.db.collection('galleries').add(newGallery);
+        const docRef = await firebase.firestore().collection('galleries').add(newGallery);
         console.log('Yeni galeri eklendi. ID:', docRef.id);
         await displayGalleries();
 
@@ -364,13 +356,13 @@ async function addGallery() {
 
 // Load gallery data for editing
 async function editGallery(id) {
-    if (!window.db) {
+    if (!typeof firebase !== 'undefined' && firebase.apps.length > 0) {
         console.error('Firebase henüz başlatılmadı');
         return;
     }
 
     try {
-        const doc = await window.db.collection('galleries').doc(id).get();
+        const doc = await firebase.firestore().collection('galleries').doc(id).get();
         if (doc.exists) {
             const gallery = { id: doc.id, ...doc.data() };
             document.getElementById('editGalleryId').value = gallery.id;
@@ -388,7 +380,7 @@ async function editGallery(id) {
 
 // Update gallery
 async function updateGallery() {
-    if (!window.db) {
+    if (!typeof firebase !== 'undefined' && firebase.apps.length > 0) {
         console.error('Firebase henüz başlatılmadı');
         return;
     }
@@ -403,7 +395,7 @@ async function updateGallery() {
     }
 
     try {
-        const docRef = window.db.collection('galleries').doc(id);
+        const docRef = firebase.firestore().collection('galleries').doc(id);
         await docRef.update({
             name: name,
             description: description,
@@ -423,14 +415,14 @@ async function updateGallery() {
 
 // Delete gallery
 async function deleteGallery(id) {
-    if (!window.db) {
+    if (!typeof firebase !== 'undefined' && firebase.apps.length > 0) {
         console.error('Firebase henüz başlatılmadı');
         return;
     }
 
     if (confirm('Bu galeriyi silmek istediğinizden emin misiniz?')) {
         try {
-            await window.db.collection('galleries').doc(id).delete();
+            await firebase.firestore().collection('galleries').doc(id).delete();
             await displayGalleries();
         } catch (error) {
             console.error('Galeri silinirken hata:', error);
@@ -441,13 +433,13 @@ async function deleteGallery(id) {
 
 // Show gallery units
 async function showGalleryUnits(galleryId) {
-    if (!window.db) {
+    if (!typeof firebase !== 'undefined' && firebase.apps.length > 0) {
         console.error('Firebase henüz başlatılmadı');
         return;
     }
 
     try {
-        const doc = await window.db.collection('galleries').doc(galleryId).get();
+        const doc = await firebase.firestore().collection('galleries').doc(galleryId).get();
         if (doc.exists) {
             const gallery = { id: doc.id, ...doc.data() };
             
@@ -524,7 +516,7 @@ function displayUnits(units) {
 
 // Add new unit
 async function addUnit() {
-    if (!window.db) {
+    if (!typeof firebase !== 'undefined' && firebase.apps.length > 0) {
         console.error('Firebase henüz başlatılmadı');
         return;
     }
@@ -539,7 +531,7 @@ async function addUnit() {
 
     try {
         const galleryId = localStorage.getItem('selectedGalleryId');
-        const docRef = await window.db.collection('galleries').doc(galleryId).get();
+        const docRef = await firebase.firestore().collection('galleries').doc(galleryId).get();
         
         if (!docRef.exists) {
             alert('Galeri bulunamadı!');
@@ -567,7 +559,7 @@ async function addUnit() {
         const faultyUnits = units.filter(u => u.status === 'Arızalı').length;
 
         // Firestore'u güncelle
-        await window.db.collection('galleries').doc(galleryId).update({
+        await firebase.firestore().collection('galleries').doc(galleryId).update({
             units: units,
             totalUnits: totalUnits,
             faultyUnits: faultyUnits,
@@ -591,14 +583,14 @@ async function addUnit() {
 
 // Edit unit
 async function editUnit(unitId) {
-    if (!window.db) {
+    if (!typeof firebase !== 'undefined' && firebase.apps.length > 0) {
         console.error('Firebase henüz başlatılmadı');
         return;
     }
 
     try {
         const galleryId = localStorage.getItem('selectedGalleryId');
-        const docRef = await window.db.collection('galleries').doc(galleryId).get();
+        const docRef = await firebase.firestore().collection('galleries').doc(galleryId).get();
         
         if (!docRef.exists) {
             alert('Galeri bulunamadı!');
@@ -627,7 +619,7 @@ async function editUnit(unitId) {
 
 // Update unit
 async function updateUnit() {
-    if (!window.db) {
+    if (!typeof firebase !== 'undefined' && firebase.apps.length > 0) {
         console.error('Firebase henüz başlatılmadı');
         return;
     }
@@ -644,7 +636,7 @@ async function updateUnit() {
 
     try {
         const galleryId = localStorage.getItem('selectedGalleryId');
-        const docRef = await window.db.collection('galleries').doc(galleryId).get();
+        const docRef = await firebase.firestore().collection('galleries').doc(galleryId).get();
         
         if (!docRef.exists) {
             alert('Galeri bulunamadı!');
@@ -669,7 +661,7 @@ async function updateUnit() {
             const faultyUnits = units.filter(u => u.status === 'Arızalı').length;
             
             // Firestore'u güncelle
-            await window.db.collection('galleries').doc(galleryId).update({
+            await firebase.firestore().collection('galleries').doc(galleryId).update({
                 units: units,
                 faultyUnits: faultyUnits,
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -694,7 +686,7 @@ async function updateUnit() {
 
 // Delete unit
 async function deleteUnit(unitId) {
-    if (!window.db) {
+    if (!typeof firebase !== 'undefined' && firebase.apps.length > 0) {
         console.error('Firebase henüz başlatılmadı');
         return;
     }
@@ -702,7 +694,7 @@ async function deleteUnit(unitId) {
     if (confirm('Bu üniteyi silmek istediğinizden emin misiniz?')) {
         try {
             const galleryId = localStorage.getItem('selectedGalleryId');
-            const docRef = await window.db.collection('galleries').doc(galleryId).get();
+            const docRef = await firebase.firestore().collection('galleries').doc(galleryId).get();
             
             if (!docRef.exists) {
                 alert('Galeri bulunamadı!');
@@ -713,7 +705,7 @@ async function deleteUnit(unitId) {
             const units = gallery.units.filter(u => u.id !== unitId);
             
             // Firestore'u güncelle
-            await window.db.collection('galleries').doc(galleryId).update({
+            await firebase.firestore().collection('galleries').doc(galleryId).update({
                 units: units,
                 totalUnits: units.length,
                 faultyUnits: units.filter(u => u.status === 'Arızalı').length,
