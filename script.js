@@ -3,13 +3,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
         // Firebase'in yüklenmesini bekle
         await new Promise((resolve) => {
-            if (window.db) {
+            if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
                 resolve();
                 return;
             }
 
             const checkFirebase = setInterval(() => {
-                if (window.db) {
+                if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
                     clearInterval(checkFirebase);
                     resolve();
                 }
@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function loadDashboard() {
     try {
         // Tüm galerileri al
-        const snapshot = await window.db.collection('galleries').get();
+        const snapshot = await firebase.firestore().collection('galleries').get();
         const galleries = [];
         snapshot.forEach(doc => {
             galleries.push({
@@ -49,7 +49,12 @@ async function loadDashboard() {
         // Kullanıcı bilgisini göster
         const user = firebase.auth().currentUser;
         if (user) {
-            document.getElementById('userInfo').textContent = user.email.split('@')[0];
+            const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+            if (currentUser && currentUser.displayName) {
+                document.getElementById('userInfo').textContent = currentUser.displayName;
+            } else {
+                document.getElementById('userInfo').textContent = user.email.split('@')[0];
+            }
         }
     } catch (error) {
         console.error('Dashboard yüklenirken hata:', error);
