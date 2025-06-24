@@ -103,7 +103,7 @@ function listenToGalleries(showUnitsForGallery = null) {
                 if (showUnitsForGallery) {
                     const gallery = galleries.find(g => g.id === showUnitsForGallery);
                     if (gallery) {
-                        showGalleryUnits(gallery.id);
+                        window.location.href = `gallery-details.html?id=${gallery.id}`;
                     }
                 }
             }, (error) => {
@@ -146,7 +146,7 @@ function updateGalleriesTable(galleries) {
         // Satıra tıklama olayı ekle
         row.onclick = (e) => {
             if (!e.target.closest('.action-buttons')) {
-                showGalleryUnits(gallery.id);
+                window.location.href = `gallery-details.html?id=${gallery.id}`;
             }
         };
         
@@ -273,7 +273,7 @@ async function displayGalleries() {
             // Satıra tıklama olayı ekle
             row.onclick = (e) => {
                 if (!e.target.closest('.action-buttons')) {
-                    showGalleryUnits(gallery.id);
+                    window.location.href = `gallery-details.html?id=${gallery.id}`;
                 }
             };
             
