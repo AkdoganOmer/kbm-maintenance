@@ -40,7 +40,7 @@ function waitForFirebase() {
         const maxAttempts = 10;
         
         const checkFirebase = () => {
-            if (typeof firebase !== 'undefined' && firebase.auth) {
+            if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
                 resolve();
             } else {
                 attempts++;
@@ -243,12 +243,12 @@ function initAuth() {
 }
 
 // Firebase yüklendikten sonra Auth'u başlat
-if (typeof firebase !== 'undefined') {
+if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
     initAuth();
 } else {
     // Firebase yüklenmesini bekle
     const checkFirebase = setInterval(() => {
-        if (typeof firebase !== 'undefined') {
+        if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
             clearInterval(checkFirebase);
             initAuth();
         }
