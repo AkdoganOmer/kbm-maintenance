@@ -1,19 +1,45 @@
+// Debug fonksiyonu
+function debug(message, data = null) {
+    const prefix = '[Debug]';
+    if (data) {
+        console.log(prefix, message, data);
+    } else {
+        console.log(prefix, message);
+    }
+}
+
 // Sayfa yüklendiğinde çalışacak
 document.addEventListener('DOMContentLoaded', async () => {
     try {
+        debug('DOM yüklendi');
+        
         // Firebase'in yüklenmesini bekle
-        await new Promise((resolve) => {
-            if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
-                resolve();
-                return;
-            }
-
+        await new Promise((resolve, reject) => {
             const checkFirebase = setInterval(() => {
-                if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+                if (typeof firebase !== 'undefined' && firebase.apps.length > 0 && window.db) {
+                    debug('Firebase ve Firestore hazır');
                     clearInterval(checkFirebase);
                     resolve();
                 }
             }, 100);
+
+            // 10 saniye sonra timeout
+            setTimeout(() => {
+                clearInterval(checkFirebase);
+                reject(new Error('Firebase yüklenirken zaman aşımı'));
+            }, 10000);
+        });
+
+        // Auth durumunu kontrol et
+        await new Promise((resolve) => {
+            const unsubscribe = firebase.auth().onAuthStateChanged((user) => {
+                unsubscribe();
+                if (!user) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+                resolve();
+            });
         });
 
         // Dashboard verilerini yükle
@@ -27,8 +53,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Dashboard verilerini yükle
 async function loadDashboard() {
     try {
+        debug('Dashboard verilerini yüklüyorum...');
+        
         // Tüm galerileri al
-        const snapshot = await firebase.firestore().collection('galleries').get();
+        const snapshot = await window.db.collection('galleries').get();
         const galleries = [];
         snapshot.forEach(doc => {
             galleries.push({
@@ -36,6 +64,8 @@ async function loadDashboard() {
                 ...doc.data()
             });
         });
+
+        debug('Galeriler yüklendi:', galleries);
 
         // İstatistikleri göster
         displayStats(galleries);
@@ -56,9 +86,11 @@ async function loadDashboard() {
                 document.getElementById('userInfo').textContent = user.email.split('@')[0];
             }
         }
+
+        debug('Dashboard yükleme tamamlandı');
     } catch (error) {
         console.error('Dashboard yüklenirken hata:', error);
-        alert('Veriler yüklenirken bir hata oluştu.');
+        alert('Veriler yüklenirken bir hata oluştu. Lütfen sayfayı yenileyin ve tekrar deneyin.');
     }
 }
 

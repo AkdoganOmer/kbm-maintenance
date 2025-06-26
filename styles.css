@@ -124,4 +124,100 @@
 
 .pdf-viewer object {
     border: none;
+}
+
+/* General styles */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Table styles */
+.table {
+    margin-bottom: 0;
+}
+
+.table th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+/* Card styles */
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    margin-bottom: 1.5rem;
+}
+
+.card-body {
+    padding: 1.25rem;
+}
+
+/* Table responsive styles */
+.table-responsive {
+    margin: -0.75rem;
+    padding: 0.75rem;
+}
+
+/* Unit name cell styles */
+.unit-name-cell {
+    max-width: 300px;
+}
+
+.unit-name-cell .fw-bold {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.unit-name-cell .text-muted {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+/* Status badge styles */
+.badge {
+    font-size: 0.875rem;
+    padding: 0.4em 0.8em;
+}
+
+/* Action buttons styles */
+.action-buttons {
+    white-space: nowrap;
+}
+
+.action-buttons .btn {
+    padding: 0.25rem 0.5rem;
+}
+
+/* Container padding for better spacing */
+.container {
+    padding-bottom: 2rem;
+}
+
+/* Modal styles */
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-footer {
+    padding: 1rem 1.5rem;
+    background-color: #f8f9fa;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .table th, .table td {
+        white-space: normal;
+    }
+    
+    .unit-name-cell {
+        max-width: none;
+    }
 } 

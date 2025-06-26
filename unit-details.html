@@ -4,13 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ünite Detayları - Konya Bilim Merkezi Bakım Takip Sistemi</title>
-    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <!-- Custom CSS -->
     <link href="styles.css" rel="stylesheet">
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+
+    <!-- Firebase Config -->
+    <script src="firebase-config.js"></script>
+
+    <!-- Auth -->
+    <script src="auth.js"></script>
+
+    <!-- Custom JS -->
+    <script src="unit-details.js"></script>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
@@ -200,20 +214,20 @@
                         <div class="mb-3" id="maintenanceDetailsGroup" style="display: none;">
                             <label for="editMaintenanceTasks" class="form-label">Yapılması Gereken İşlemler <span class="text-danger">*</span></label>
                             <textarea class="form-control" id="editMaintenanceTasks" rows="3" 
-                                placeholder="Arızayı gidermek için yapılması gereken işlemleri yazın."></textarea>
-                            <div class="form-text">Arızayı gidermek için yapılması gereken işlemleri adım adım açıklayın.</div>
+                                placeholder="Bakım için yapılması gereken işlemleri detaylı olarak yazın."></textarea>
+                            <div class="form-text">Ünitenin bakımı için yapılması gereken işlemleri maddeler halinde yazın.</div>
                         </div>
                         <div class="mb-3">
-                            <label for="editTechnicalDetails" class="form-label">Teknik Özellikler</label>
+                            <label for="editTechnicalDetails" class="form-label">Teknik Detaylar</label>
                             <textarea class="form-control" id="editTechnicalDetails" rows="5" 
-                                placeholder="Ünitenin teknik özelliklerini yazın. Örnek: Güç kaynağı, boyutlar, çalışma prensipleri, vb."></textarea>
-                            <div class="form-text">Ünitenin teknik özelliklerini detaylı bir şekilde açıklayın.</div>
+                                placeholder="Ünitenin teknik özelliklerini ve detaylarını yazın."></textarea>
+                            <div class="form-text">Ünitenin teknik özellikleri, çalışma prensibi, güç gereksinimleri vb. bilgileri yazın.</div>
                         </div>
                         <div class="mb-3">
                             <label for="editMaintenanceInstructions" class="form-label">Bakım Talimatları</label>
                             <textarea class="form-control" id="editMaintenanceInstructions" rows="5" 
-                                placeholder="Ünitenin bakım talimatlarını yazın. Örnek: Periyodik kontroller, temizlik prosedürleri, vb."></textarea>
-                            <div class="form-text">Ünitenin bakımı için gerekli talimatları adım adım açıklayın.</div>
+                                placeholder="Ünitenin bakım talimatlarını detaylı olarak yazın."></textarea>
+                            <div class="form-text">Periyodik bakım için yapılması gereken işlemleri, kontrol edilmesi gereken noktaları ve dikkat edilmesi gereken hususları yazın.</div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Teknik Dokümanlar</label>
@@ -225,9 +239,9 @@
                             <input type="file" class="form-control" id="imageInput" multiple accept="image/*">
                             <div class="form-text">JPG, PNG formatında görseller ekleyebilirsiniz. (Maksimum dosya boyutu: 5MB)</div>
                         </div>
-                        <div class="d-flex justify-content-between">
-                            <button type="button" class="btn btn-secondary" onclick="toggleEditMode()">İptal</button>
-                            <button type="submit" class="btn btn-primary">Kaydet</button>
+                        <div class="text-end">
+                            <button type="button" class="btn btn-secondary me-2" onclick="toggleEditMode()">İptal</button>
+                            <button type="button" class="btn btn-primary" onclick="saveUnitDetails()">Kaydet</button>
                         </div>
                     </form>
                 </div>
@@ -274,43 +288,5 @@
             </div>
         </div>
     </div>
-
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-    
-    <!-- Firebase Config -->
-    <script>
-        // Firebase yapılandırması
-        const firebaseConfig = {
-            apiKey: "AIzaSyC-q-7B2IVQDRdNmUJ5K_UT-Tp2j1gZHIk",
-            authDomain: "sergi-bakim-onarim.firebaseapp.com",
-            projectId: "sergi-bakim-onarim",
-            storageBucket: "sergi-bakim-onarim.appspot.com",
-            messagingSenderId: "998277420747",
-            appId: "1:998277420747:web:663a465d9e198a2fadad4e",
-            measurementId: "G-7D0P08YB4W"
-        };
-
-        // Firebase'i başlat
-        if (firebase.apps.length === 0) {
-            firebase.initializeApp(firebaseConfig);
-        }
-
-        // Firestore referansını al
-        const db = firebase.firestore();
-
-        // Firestore ayarları
-        db.settings({
-            merge: true
-        });
-    </script>
-    
-    <!-- Auth JS -->
-    <script src="auth.js"></script>
-    
-    <!-- Unit Details JS -->
-    <script src="unit-details.js"></script>
 </body>
 </html> 

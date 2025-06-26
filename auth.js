@@ -45,6 +45,18 @@ function waitForFirebase() {
             } else {
                 attempts++;
                 if (attempts >= maxAttempts) {
+                    // Yerel geliştirme ortamında isek, test kullanıcısını otomatik ayarla
+                    if (window.location.protocol === 'file:') {
+                        currentUser = {
+                            email: 'admin@kbm.org.tr',
+                            role: USER_ROLES.ADMIN,
+                            displayName: 'Admin Kullanıcı (Yerel)',
+                            uid: 'local-dev'
+                        };
+                        sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+                        resolve();
+                        return;
+                    }
                     reject(new Error('Firebase yüklenemedi'));
                 } else {
                     setTimeout(checkFirebase, 500);
@@ -59,6 +71,25 @@ function waitForFirebase() {
 // Giriş yap
 async function login(email, password) {
     try {
+        // Yerel geliştirme ortamı kontrolü
+        if (window.location.protocol === 'file:') {
+            const testUser = TEST_USERS[email];
+            if (!testUser || testUser.password !== password) {
+                throw new Error('Hatalı kullanıcı adı veya şifre.');
+            }
+            
+            currentUser = {
+                email: email,
+                role: testUser.role,
+                displayName: testUser.displayName,
+                uid: 'local-dev'
+            };
+            sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+            window.location.href = 'index.html';
+            return currentUser;
+        }
+
+        // Firebase ortamı için normal giriş işlemi
         await waitForFirebase();
 
         // E-posta formatını kontrol et
@@ -91,30 +122,26 @@ async function login(email, password) {
         return currentUser;
     } catch (error) {
         console.error('Giriş hatası:', error);
-        console.error('Hata detayları:', {
-            code: error.code,
-            message: error.message,
-            fullError: error
-        });
         
-        // Firebase hata mesajlarını Türkçeleştir
-        if (error.code === 'auth/wrong-password') {
-            throw new Error('Hatalı şifre.');
-        } else if (error.code === 'auth/user-not-found') {
-            throw new Error('Kullanıcı bulunamadı.');
-        } else if (error.code === 'auth/invalid-email') {
-            throw new Error('Geçersiz e-posta adresi.');
-        } else if (error.code === 'auth/user-disabled') {
-            throw new Error('Bu hesap devre dışı bırakılmış.');
-        } else if (error.code === 'auth/too-many-requests') {
-            throw new Error('Çok fazla başarısız giriş denemesi. Lütfen daha sonra tekrar deneyin.');
-        } else if (error.code === 'auth/network-request-failed') {
-            throw new Error('Ağ bağlantısı hatası. İnternet bağlantınızı kontrol edin.');
-        } else if (error.code === 'auth/invalid-api-key') {
-            throw new Error('Firebase yapılandırması hatalı. Lütfen yöneticinize bildirin.');
-        } else {
-            throw error;
+        if (error.code) {
+            // Firebase hata mesajlarını Türkçeleştir
+            if (error.code === 'auth/wrong-password') {
+                throw new Error('Hatalı şifre.');
+            } else if (error.code === 'auth/user-not-found') {
+                throw new Error('Kullanıcı bulunamadı.');
+            } else if (error.code === 'auth/invalid-email') {
+                throw new Error('Geçersiz e-posta adresi.');
+            } else if (error.code === 'auth/user-disabled') {
+                throw new Error('Bu hesap devre dışı bırakılmış.');
+            } else if (error.code === 'auth/too-many-requests') {
+                throw new Error('Çok fazla başarısız giriş denemesi. Lütfen daha sonra tekrar deneyin.');
+            } else if (error.code === 'auth/network-request-failed') {
+                throw new Error('Ağ bağlantısı hatası. İnternet bağlantınızı kontrol edin.');
+            } else if (error.code === 'auth/invalid-api-key') {
+                throw new Error('Firebase yapılandırması hatalı. Lütfen yöneticinize bildirin.');
+            }
         }
+        throw error;
     }
 }
 

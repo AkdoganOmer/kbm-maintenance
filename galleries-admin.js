@@ -1,25 +1,96 @@
 // Firebase referansı
 let unsubscribeGalleries; // Dinleyiciyi temizlemek için
 
+// Debug fonksiyonu
+function debug(message, data = null) {
+    const prefix = '[Debug]';
+    if (data) {
+        console.log(prefix, message, data);
+    } else {
+        console.log(prefix, message);
+    }
+}
+
 // Sayfa yüklendiğinde çalışacak
 document.addEventListener('DOMContentLoaded', async () => {
+    debug('DOM yüklendi');
     try {
-        // Firebase'in yüklenmesini bekle
-        await new Promise((resolve) => {
-            if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
-                resolve();
+        // Yerel geliştirme ortamı kontrolü
+        const isLocalDev = window.location.protocol === 'file:';
+        debug('Yerel geliştirme modu:', isLocalDev);
+
+        if (isLocalDev) {
+            debug('Mock veriler yükleniyor...');
+            const mockGalleries = [
+                {
+                    id: 'mock-1',
+                    name: 'Fizik Galerisi',
+                    description: 'Fizik deneyleri ve gösterileri',
+                    totalUnits: 10,
+                    faultyUnits: 2,
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                    units: []
+                },
+                {
+                    id: 'mock-2',
+                    name: 'Kimya Galerisi',
+                    description: 'Kimya deneyleri ve gösterileri',
+                    totalUnits: 8,
+                    faultyUnits: 1,
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                    units: []
+                },
+                {
+                    id: 'mock-3',
+                    name: 'Uzay Galerisi',
+                    description: 'Uzay ve astronomi gösterileri',
+                    totalUnits: 15,
+                    faultyUnits: 0,
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                    units: []
+                }
+            ];
+
+            // Kullanıcı kontrolü
+            const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+            debug('Mevcut kullanıcı:', currentUser);
+
+            if (!currentUser || !['admin', 'manager', 'technician'].includes(currentUser.role)) {
+                debug('Yetkisiz erişim');
+                alert('Bu sayfaya erişim yetkiniz yok!');
+                window.location.href = 'index.html';
                 return;
             }
 
+            debug('Mock galeriler yükleniyor:', mockGalleries);
+            updateGalleriesTable(mockGalleries);
+            return;
+        }
+
+        debug('Firebase yükleniyor...');
+        // Firebase'in yüklenmesini bekle
+        await new Promise((resolve, reject) => {
+            // Firebase Config'in yüklenmesini bekle
             const checkFirebase = setInterval(() => {
-                if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+                if (typeof firebase !== 'undefined' && firebase.apps.length > 0 && window.db) {
+                    debug('Firebase ve Firestore hazır');
                     clearInterval(checkFirebase);
                     resolve();
                 }
             }, 100);
+
+            // 10 saniye sonra timeout
+            setTimeout(() => {
+                clearInterval(checkFirebase);
+                reject(new Error('Firebase yüklenirken zaman aşımı'));
+            }, 10000);
         });
 
         // Galerileri başlat
+        debug('Galeriler başlatılıyor');
         initializeGalleries();
     } catch (error) {
         console.error('Sayfa başlatılırken hata:', error);
@@ -35,6 +106,18 @@ function initializeGalleries() {
         // URL parametrelerini kontrol et
         const urlParams = new URLSearchParams(window.location.search);
         const showUnitsForGallery = urlParams.get('showUnits');
+
+        // Yerel geliştirme ortamı kontrolü
+        if (window.location.protocol === 'file:') {
+            const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+            if (!currentUser || !['admin', 'manager', 'technician'].includes(currentUser.role)) {
+                console.log('Yetkisiz erişim');
+                alert('Bu sayfaya erişim yetkiniz yok!');
+                window.location.href = 'index.html';
+                return;
+            }
+            return;
+        }
 
         // Oturum durumunu kontrol et
         firebase.auth().onAuthStateChanged(async (user) => {
@@ -146,7 +229,7 @@ function updateGalleriesTable(galleries) {
         // Satıra tıklama olayı ekle
         row.onclick = (e) => {
             if (!e.target.closest('.action-buttons')) {
-                window.location.href = `gallery-details.html?id=${gallery.id}`;
+                showGalleryUnits(gallery.id.toString());
             }
         };
         
@@ -316,7 +399,7 @@ async function displayGalleries() {
 
 // Add new gallery
 async function addGallery() {
-    if (!typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+    if (typeof firebase === 'undefined' || firebase.apps.length === 0) {
         console.error('Firebase henüz başlatılmadı');
         alert('Sistem hazır değil, lütfen sayfayı yenileyin');
         return;
@@ -356,7 +439,7 @@ async function addGallery() {
 
 // Load gallery data for editing
 async function editGallery(id) {
-    if (!typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+    if (typeof firebase === 'undefined' || firebase.apps.length === 0) {
         console.error('Firebase henüz başlatılmadı');
         return;
     }
@@ -380,7 +463,7 @@ async function editGallery(id) {
 
 // Update gallery
 async function updateGallery() {
-    if (!typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+    if (typeof firebase === 'undefined' || firebase.apps.length === 0) {
         console.error('Firebase henüz başlatılmadı');
         return;
     }
@@ -415,7 +498,7 @@ async function updateGallery() {
 
 // Delete gallery
 async function deleteGallery(id) {
-    if (!typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+    if (typeof firebase === 'undefined' || firebase.apps.length === 0) {
         console.error('Firebase henüz başlatılmadı');
         return;
     }
@@ -433,30 +516,37 @@ async function deleteGallery(id) {
 
 // Show gallery units
 async function showGalleryUnits(galleryId) {
-    if (!typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+    if (typeof firebase === 'undefined' || firebase.apps.length === 0 || !window.db) {
         console.error('Firebase henüz başlatılmadı');
         return;
     }
 
     try {
-        const doc = await firebase.firestore().collection('galleries').doc(galleryId).get();
-        if (doc.exists) {
-            const gallery = { id: doc.id, ...doc.data() };
-            
-            // Update UI
-            document.getElementById('gallerySection').style.display = 'none';
-            document.getElementById('unitsSection').style.display = 'block';
-            document.getElementById('selectedGalleryName').textContent = `${gallery.name} - Üniteler`;
-            
-            // Store selected gallery ID
-            localStorage.setItem('selectedGalleryId', galleryId);
-            
-            // Display units
-            displayUnits(gallery.units || []);
+        debug('Galeri detayları alınıyor:', galleryId);
+        const doc = await window.db.collection('galleries').doc(galleryId).get();
+        
+        if (!doc.exists) {
+            console.error('Galeri bulunamadı:', galleryId);
+            alert('Galeri bulunamadı!');
+            return;
         }
+
+        const gallery = { id: doc.id, ...doc.data() };
+        debug('Galeri detayları alındı:', gallery);
+        
+        // Update UI
+        document.getElementById('gallerySection').style.display = 'none';
+        document.getElementById('unitsSection').style.display = 'block';
+        document.getElementById('selectedGalleryName').textContent = `${gallery.name} - Üniteler`;
+        
+        // Store selected gallery ID
+        localStorage.setItem('selectedGalleryId', galleryId);
+        
+        // Display units
+        displayUnits(gallery.units || []);
     } catch (error) {
         console.error('Galeri detayları alınırken hata:', error);
-        alert('Galeri detayları alınırken bir hata oluştu');
+        alert('Galeri detayları alınırken bir hata oluştu. Lütfen sayfayı yenileyin ve tekrar deneyin.');
     }
 }
 
@@ -487,9 +577,9 @@ function displayUnits(units) {
         
         row.innerHTML = `
             <td>
-                <div class="d-flex align-items-center">
+                <div class="d-flex align-items-center unit-name-cell">
                     <i class="bi bi-box me-2"></i>
-                    <div>
+                    <div class="overflow-hidden">
                         <div class="fw-bold">${unit.name}</div>
                         <div class="small text-muted">${unit.description || ''}</div>
                     </div>
@@ -497,12 +587,12 @@ function displayUnits(units) {
             </td>
             <td>
                 <span class="badge ${unit.status === 'Arızalı' ? 'bg-danger' : 'bg-success'}">
-                    ${unit.status}
+                    ${unit.status || 'Çalışıyor'}
                 </span>
             </td>
             <td>${formatDate(unit.lastMaintenance)}</td>
-            <td class="action-buttons">
-                <button class="btn btn-sm btn-primary me-2" onclick="editUnit(${unit.id})">
+            <td class="action-buttons text-end">
+                <button class="btn btn-sm btn-primary me-1" onclick="editUnit(${unit.id})">
                     <i class="bi bi-pencil"></i>
                 </button>
                 <button class="btn btn-sm btn-danger" onclick="deleteUnit(${unit.id})">
@@ -510,13 +600,14 @@ function displayUnits(units) {
                 </button>
             </td>
         `;
+        
         tableBody.appendChild(row);
     });
 }
 
 // Add new unit
 async function addUnit() {
-    if (!typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+    if (typeof firebase === 'undefined' || firebase.apps.length === 0) {
         console.error('Firebase henüz başlatılmadı');
         return;
     }
@@ -583,7 +674,7 @@ async function addUnit() {
 
 // Edit unit
 async function editUnit(unitId) {
-    if (!typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+    if (typeof firebase === 'undefined' || firebase.apps.length === 0) {
         console.error('Firebase henüz başlatılmadı');
         return;
     }
@@ -619,7 +710,7 @@ async function editUnit(unitId) {
 
 // Update unit
 async function updateUnit() {
-    if (!typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+    if (typeof firebase === 'undefined' || firebase.apps.length === 0) {
         console.error('Firebase henüz başlatılmadı');
         return;
     }
@@ -686,7 +777,7 @@ async function updateUnit() {
 
 // Delete unit
 async function deleteUnit(unitId) {
-    if (!typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+    if (typeof firebase === 'undefined' || firebase.apps.length === 0) {
         console.error('Firebase henüz başlatılmadı');
         return;
     }

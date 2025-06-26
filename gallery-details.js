@@ -1,6 +1,26 @@
+// Firebase referansı
+const db = firebase.firestore();
+
 // Sayfa yüklendiğinde çalışacak
 document.addEventListener('DOMContentLoaded', async () => {
     try {
+        // Firebase'in yüklenmesini bekle
+        await new Promise((resolve) => {
+            if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+                console.log('Firebase zaten yüklü');
+                resolve();
+                return;
+            }
+
+            const checkFirebase = setInterval(() => {
+                if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+                    console.log('Firebase yüklendi');
+                    clearInterval(checkFirebase);
+                    resolve();
+                }
+            }, 100);
+        });
+
         // Sayfayı başlat
         await loadGalleryDetails();
     } catch (error) {

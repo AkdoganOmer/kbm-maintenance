@@ -2,23 +2,19 @@
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         // Firebase'in yüklenmesini bekle
-        await new Promise((resolve) => {
-            if (window.db) {
-                resolve();
-                return;
-            }
+        await new Promise((resolve, reject) => {
+            const checkFirebase = setInterval(() => {
+                if (typeof firebase !== 'undefined' && firebase.apps.length > 0 && window.db) {
+                    clearInterval(checkFirebase);
+                    resolve();
+                }
+            }, 100);
 
-            const script = document.createElement('script');
-            script.src = 'firebase-config.js';
-            script.onload = () => {
-                const checkFirebase = setInterval(() => {
-                    if (window.db) {
-                        clearInterval(checkFirebase);
-                        resolve();
-                    }
-                }, 100);
-            };
-            document.head.appendChild(script);
+            // 10 saniye sonra timeout
+            setTimeout(() => {
+                clearInterval(checkFirebase);
+                reject(new Error('Firebase yüklenirken zaman aşımı'));
+            }, 10000);
         });
 
         // Auth durumunu kontrol et
