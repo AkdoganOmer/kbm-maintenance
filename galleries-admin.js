@@ -200,40 +200,15 @@ function listenToGalleries(showUnitsForGallery = null) {
 // Galeri tablosunu güncelle
 function updateGalleriesTable(galleries) {
     const tableBody = document.getElementById('galleriesTable');
-    
-    if (!tableBody) {
-        console.error('Galeri tablosu bulunamadı');
-        return;
-    }
-
-    // Tabloyu temizle
     tableBody.innerHTML = '';
 
-    if (galleries.length === 0) {
-        // Galeri yoksa mesaj göster
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td colspan="4" class="text-center">
-                Henüz galeri eklenmemiş
-            </td>
-        `;
-        tableBody.appendChild(row);
-        return;
-    }
-
-    // Galerileri tabloya ekle
     galleries.forEach(gallery => {
         const row = document.createElement('tr');
         row.style.cursor = 'pointer';
         
-        // Satıra tıklama olayı ekle
-        row.onclick = (e) => {
-            if (!e.target.closest('.action-buttons')) {
-                showGalleryUnits(gallery.id.toString());
-            }
-        };
+        // Tüm satıra tıklama olayı ekle
+        row.onclick = () => showGalleryUnits(gallery.id);
         
-        // Satır içeriğini oluştur
         row.innerHTML = `
             <td>
                 <div class="d-flex align-items-center">
@@ -244,21 +219,21 @@ function updateGalleriesTable(galleries) {
                     </div>
                 </div>
             </td>
-            <td class="text-center">
-                <span class="badge bg-primary">${gallery.totalUnits || 0}</span>
-            </td>
+            <td class="text-center">${gallery.totalUnits || 0}</td>
             <td class="text-center">
                 <span class="badge ${gallery.faultyUnits > 0 ? 'bg-danger' : 'bg-success'}">
                     ${gallery.faultyUnits || 0}
                 </span>
             </td>
-            <td class="action-buttons">
-                <button class="btn btn-sm btn-primary me-2" onclick="editGallery('${gallery.id}')">
-                    <i class="bi bi-pencil"></i>
-                </button>
-                <button class="btn btn-sm btn-danger" onclick="deleteGallery('${gallery.id}')">
-                    <i class="bi bi-trash"></i>
-                </button>
+            <td>
+                <div class="d-flex justify-content-end">
+                    <button class="btn btn-sm btn-primary me-1" onclick="editGallery('${gallery.id}'); event.stopPropagation();">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteGallery('${gallery.id}'); event.stopPropagation();">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
             </td>
         `;
         
@@ -514,39 +489,38 @@ async function deleteGallery(id) {
     }
 }
 
-// Show gallery units
+// Galeri ünitelerini göster
 async function showGalleryUnits(galleryId) {
-    if (typeof firebase === 'undefined' || firebase.apps.length === 0 || !window.db) {
-        console.error('Firebase henüz başlatılmadı');
-        return;
-    }
-
     try {
-        debug('Galeri detayları alınıyor:', galleryId);
-        const doc = await window.db.collection('galleries').doc(galleryId).get();
+        debug('Galeri üniteleri gösteriliyor:', galleryId);
         
-        if (!doc.exists) {
-            console.error('Galeri bulunamadı:', galleryId);
-            alert('Galeri bulunamadı!');
-            return;
-        }
-
-        const gallery = { id: doc.id, ...doc.data() };
-        debug('Galeri detayları alındı:', gallery);
-        
-        // Update UI
-        document.getElementById('gallerySection').style.display = 'none';
-        document.getElementById('unitsSection').style.display = 'block';
-        document.getElementById('selectedGalleryName').textContent = `${gallery.name} - Üniteler`;
-        
-        // Store selected gallery ID
+        // Galeri ID'sini localStorage'a kaydet
         localStorage.setItem('selectedGalleryId', galleryId);
         
-        // Display units
-        displayUnits(gallery.units || []);
+        // Galeri bilgilerini al
+        const galleryDoc = await window.db.collection('galleries').doc(galleryId).get();
+        
+        if (!galleryDoc.exists) {
+            console.error('Galeri bulunamadı');
+            return;
+        }
+        
+        const gallery = galleryDoc.data();
+        
+        // Galeri adını güncelle
+        document.getElementById('selectedGalleryName').textContent = gallery.name;
+        
+        // Üniteleri göster
+        const units = gallery.units || [];
+        displayUnits(units);
+        
+        // Galeri bölümünü gizle, üniteler bölümünü göster
+        document.getElementById('gallerySection').style.display = 'none';
+        document.getElementById('unitsSection').style.display = 'block';
+        
     } catch (error) {
-        console.error('Galeri detayları alınırken hata:', error);
-        alert('Galeri detayları alınırken bir hata oluştu. Lütfen sayfayı yenileyin ve tekrar deneyin.');
+        console.error('Üniteler gösterilirken hata:', error);
+        alert('Üniteler yüklenirken bir hata oluştu: ' + error.message);
     }
 }
 
