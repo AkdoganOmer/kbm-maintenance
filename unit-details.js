@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error('Sayfa başlatılırken hata:', error);
         debugLog('Sayfa başlatılırken hata:', error);
         alert(error.message || 'Sayfa yüklenirken bir hata oluştu. Lütfen sayfayı yenileyin.');
-        window.location.href = 'galleries.html';
+        window.location.href = 'index.html';
     }
 });
 
@@ -161,7 +161,7 @@ async function loadUnitDetails() {
         debugLog('Galeri ve ünite ID\'leri:', { galleryId, unitId });
 
         if (!galleryId || !unitId) {
-            throw new Error('Galeri veya ünite bilgisi eksik! Lütfen galeriler sayfasından bir ünite seçin.');
+            throw new Error('Galeri veya ünite bilgisi eksik! Lütfen ana sayfadan bir ünite seçin.');
         }
 
         const docRef = await window.db.collection('galleries').doc(galleryId).get();
@@ -202,7 +202,7 @@ async function loadUnitDetails() {
         debugLog('Ünite detayları yüklenirken hata:', error);
         hideLoadingState();
         alert(error.message || 'Ünite detayları yüklenirken bir hata oluştu.');
-        window.location.href = 'galleries.html';
+        window.location.href = 'index.html';
     }
 }
 
@@ -385,11 +385,19 @@ function updateImagesAndDocuments(unit) {
     const unitImages = document.getElementById('unitImages');
     if (unitImages) {
         if (unit.images && unit.images.length > 0) {
-            unitImages.innerHTML = unit.images.map(image => `
-                <div class="unit-image mb-3">
-                    <img src="${image}" class="img-fluid rounded" alt="${unit.name}" style="max-height: 300px; object-fit: cover;">
-                </div>
-            `).join('');
+            unitImages.innerHTML = unit.images.map(image => {
+                // Base64 formatında mı yoksa URL mi kontrol et
+                const imageSource = image.base64Data || image.url || image;
+                const imageName = image.name || 'Görsel';
+                
+                return `
+                    <div class="unit-image mb-3">
+                        <img src="${imageSource}" class="img-fluid rounded" alt="${imageName}" 
+                             style="max-height: 300px; object-fit: cover; cursor: pointer;" 
+                             onclick="showImageModal('${imageSource}', '${imageName}')">
+                    </div>
+                `;
+            }).join('');
         } else {
             unitImages.innerHTML = `
                 <div class="no-images-placeholder">
@@ -411,25 +419,41 @@ function updateImagesAndDocuments(unit) {
                         const isPDF = doc.name.toLowerCase().endsWith('.pdf');
                         const iconClass = isPDF ? 'bi-file-earmark-pdf text-danger' : 'bi-file-earmark-text text-primary';
                         
+                        // Base64 formatında mı yoksa URL mi kontrol et
+                        const documentSource = doc.base64Data || doc.url || doc;
+                        const documentName = doc.name || 'Doküman';
+                        const documentSize = doc.size || 0;
+                        
                         return `
                             <div class="document-item d-flex align-items-center p-3 mb-3 bg-light rounded">
                                 <i class="bi ${iconClass} me-3 fs-4"></i>
                                 <div class="flex-grow-1">
-                                    <div class="fw-bold">${doc.name}</div>
-                                    <div class="text-muted small">${formatFileSize(doc.size)}</div>
+                                    <div class="fw-bold">${documentName}</div>
+                                    <div class="text-muted small">${formatFileSize(documentSize)}</div>
+                                    ${doc.status === 'failed' ? '<div class="text-danger small">❌ Yükleme başarısız</div>' : ''}
+                                    ${doc.status === 'processed' ? '<div class="text-success small">✅ Base64 formatında</div>' : ''}
+                                    ${doc.status === 'too_large' ? '<div class="text-warning small">⚠️ Dosya çok büyük (sadece isim)</div>' : ''}
                                 </div>
                                 <div class="btn-group" role="group">
-                                    ${isPDF ? 
-                                        `<button class="btn btn-sm btn-primary" onclick="showPdfViewer('${doc.data}', '${doc.name}')" title="PDF Görüntüle">
-                                            <i class="bi bi-eye"></i>
-                                        </button>` : 
-                                        `<button class="btn btn-sm btn-outline-primary" onclick="window.open('${doc.data}', '_blank')" title="Görüntüle">
-                                            <i class="bi bi-eye"></i>
+                                    ${doc.status === 'too_large' ? 
+                                        `<button class="btn btn-sm btn-secondary" disabled title="Dosya çok büyük - görüntülenemez">
+                                            <i class="bi bi-eye-slash"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-secondary" disabled title="Dosya çok büyük - indirilemez">
+                                            <i class="bi bi-download"></i>
+                                        </button>` :
+                                        `${isPDF ? 
+                                            `<button class="btn btn-sm btn-primary" onclick="showPdfViewer('${documentSource}', '${documentName}')" title="PDF Görüntüle">
+                                                <i class="bi bi-eye"></i>
+                                            </button>` : 
+                                            `<button class="btn btn-sm btn-outline-primary" onclick="window.open('${documentSource}', '_blank')" title="Görüntüle">
+                                                <i class="bi bi-eye"></i>
+                                            </button>`
+                                        }
+                                        <button class="btn btn-sm btn-success" onclick="downloadDocument('${documentSource}', '${documentName}')" title="İndir">
+                                            <i class="bi bi-download"></i>
                                         </button>`
                                     }
-                                    <button class="btn btn-sm btn-success" onclick="downloadDocument('${doc.data}', '${doc.name}')" title="İndir">
-                                        <i class="bi bi-download"></i>
-                                    </button>
                                 </div>
                             </div>
                         `;
@@ -981,8 +1005,86 @@ function displayMaintenanceHistory(maintenanceHistory) {
 
 // Geri dön fonksiyonu
 function goBack() {
-    // Direkt ana sayfaya dön
-    window.location.href = 'index.html';
+    // Ana sayfaya dön ve galeri üniteler modalını aç
+    const urlParams = new URLSearchParams(window.location.search);
+    const galleryId = urlParams.get('galleryId');
+    
+    if (galleryId) {
+        // Ana sayfaya dön ve galeri modalını aç
+        window.location.href = `index.html?openGallery=${galleryId}`;
+    } else {
+        // Galeri ID yoksa direkt ana sayfaya dön
+        window.location.href = 'index.html';
+    }
+}
+
+// Mevcut üniteyi sil
+async function deleteCurrentUnit() {
+    try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const galleryId = urlParams.get('galleryId');
+        const unitId = urlParams.get('unitId');
+        
+        if (!galleryId || !unitId) {
+            alert('Galeri veya ünite bilgisi eksik!');
+            return;
+        }
+        
+        // Galeri dokümanını al
+        const galleryDoc = await window.db.collection('galleries').doc(galleryId).get();
+        
+        if (!galleryDoc.exists) {
+            alert('Galeri bulunamadı!');
+            return;
+        }
+        
+        const gallery = galleryDoc.data();
+        const unit = gallery.units.find(u => String(u.id) === String(unitId));
+        
+        if (!unit) {
+            alert('Ünite bulunamadı!');
+            return;
+        }
+        
+        // Onay al
+        const confirmDelete = confirm(`"${unit.name}" ünitesini silmek istediğinizden emin misiniz?\n\nBu işlem geri alınamaz ve üniteye ait tüm bakım geçmişi de silinecektir.`);
+        
+        if (!confirmDelete) {
+            return;
+        }
+        
+        // Loading göster
+        const deleteButton = event.target.closest('button');
+        const originalContent = deleteButton.innerHTML;
+        deleteButton.innerHTML = '<i class="bi bi-hourglass-split"></i> Siliniyor...';
+        deleteButton.disabled = true;
+        
+        // Üniteyi listeden çıkar
+        const updatedUnits = gallery.units.filter(u => String(u.id) !== String(unitId));
+        
+        // Galeriyi güncelle
+        await window.db.collection('galleries').doc(galleryId).update({
+            units: updatedUnits,
+            updatedAt: new Date().toISOString()
+        });
+        
+        // Başarı mesajı ve yönlendirme
+        alert(`"${unit.name}" ünitesi başarıyla silindi.`);
+        
+        // Ana sayfaya yönlendir
+        window.location.href = 'index.html';
+        
+    } catch (error) {
+        console.error('Ünite silinirken hata:', error);
+        alert('Ünite silinirken bir hata oluştu: ' + error.message);
+        
+        // Buton durumunu geri al
+        const deleteButton = event.target.closest('button');
+        if (deleteButton) {
+            deleteButton.innerHTML = '<i class="bi bi-trash3"></i> Ünite Sil';
+            deleteButton.disabled = false;
+        }
+    }
 }
 
 // Complete maintenance
@@ -1421,14 +1523,83 @@ function downloadPDF() {
     }
 }
 
+// Görsel modalını göster
+function showImageModal(imageSource, imageName) {
+    // Modal HTML'ini oluştur
+    const modalHTML = `
+        <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="imageModalLabel">
+                            <i class="bi bi-image me-2"></i>
+                            ${imageName}
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body text-center p-0">
+                        <img src="${imageSource}" class="img-fluid" alt="${imageName}" style="max-width: 100%; height: auto;">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle"></i> Kapat
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="downloadImage('${imageSource}', '${imageName}')">
+                            <i class="bi bi-download"></i> İndir
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Mevcut modal'ı kaldır (varsa)
+    const existingModal = document.getElementById('imageModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Modal'ı body'ye ekle
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Modal'ı göster
+    const modal = new bootstrap.Modal(document.getElementById('imageModal'));
+    modal.show();
+    
+    // Modal kapandığında DOM'dan kaldır
+    document.getElementById('imageModal').addEventListener('hidden.bs.modal', function () {
+        this.remove();
+    });
+}
+
+// Görsel indirme fonksiyonu
+function downloadImage(imageSource, imageName) {
+    try {
+        const link = document.createElement('a');
+        link.href = imageSource;
+        link.download = imageName || 'image.jpg';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    } catch (error) {
+        console.error('Görsel indirme hatası:', error);
+        alert('Görsel indirilemedi: ' + error.message);
+    }
+}
+
 // Download Document
 function downloadDocument(url, fileName) {
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    try {
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    } catch (error) {
+        console.error('Doküman indirme hatası:', error);
+        alert('Doküman indirilemedi: ' + error.message);
+    }
 }
 
 // Modal Functions

@@ -70,9 +70,7 @@ async function loadMaintenanceInProgress() {
             maintenanceListElement.innerHTML = maintenanceInProgress.map(record => `
                 <tr>
                     <td>
-                        <a href="galleries.html?showUnits=${record.galleryId}" class="text-decoration-none">
-                            ${record.galleryName}
-                        </a>
+                        ${record.galleryName}
                     </td>
                     <td>
                         <a href="unit-details.html?galleryId=${record.galleryId}&unitId=${record.unitId}" class="text-decoration-none">
@@ -298,6 +296,20 @@ document.addEventListener('DOMContentLoaded', async function() {
 
             // Dashboard'ı yükle
             await loadDashboard();
+            
+            // URL parametresi kontrolü - galeri modalı açılacak mı?
+            const urlParams = new URLSearchParams(window.location.search);
+            const openGalleryId = urlParams.get('openGallery');
+            
+            if (openGalleryId) {
+                // URL'den parametreyi temizle
+                window.history.replaceState({}, document.title, window.location.pathname);
+                
+                // Galeri üniteler modalını aç
+                setTimeout(() => {
+                    showGalleryUnits(openGalleryId);
+                }, 1000); // Dashboard yüklendikten sonra modal açılsın
+            }
         });
 
     } catch (error) {
@@ -386,9 +398,7 @@ async function loadFaultyUnitsList() {
                             ${faultyUnits.map(unit => `
                                 <tr>
                                     <td>
-                                        <a href="galleries.html?showUnits=${unit.galleryId}" class="text-decoration-none">
-                                            ${unit.galleryName}
-                                        </a>
+                                        ${unit.galleryName}
                                     </td>
                                     <td>
                                         <a href="unit-details.html?galleryId=${unit.galleryId}&unitId=${unit.id}" class="text-decoration-none">
@@ -504,9 +514,7 @@ async function loadWorkingUnitsList() {
                             ${workingUnits.map(unit => `
                                 <tr>
                                     <td>
-                                        <a href="galleries.html?showUnits=${unit.galleryId}" class="text-decoration-none">
-                                            ${unit.galleryName}
-                                        </a>
+                                        ${unit.galleryName}
                                     </td>
                                     <td>
                                         <a href="unit-details.html?galleryId=${unit.galleryId}&unitId=${unit.id}" class="text-decoration-none">
@@ -566,6 +574,9 @@ async function showAllUnitsModal() {
         
         // Tüm üniteleri yükle
         await loadAllUnitsList();
+        
+        // Admin butonlarını göster
+        showAdminButtons();
         
     } catch (error) {
         console.error('Modal açılırken hata:', error);
@@ -720,9 +731,7 @@ async function loadAllUnitsList() {
                                             <td>
                                                 <div class="gallery-info">
                                                     <i class="bi bi-collection text-primary me-2"></i>
-                                                    <a href="galleries.html?showUnits=${unit.galleryId}" class="text-decoration-none">
-                                                        ${unit.galleryName}
-                                                    </a>
+                                                    ${unit.galleryName}
                                                 </div>
                                             </td>
                                             <td>
@@ -800,6 +809,9 @@ async function showGalleriesModal() {
         // Galerileri yükle
         await loadGalleriesList();
         
+        // Admin butonlarını göster
+        showAdminButtons();
+        
     } catch (error) {
         console.error('Modal açılırken hata:', error);
         showError('Modal açılırken bir hata oluştu.');
@@ -847,33 +859,43 @@ async function loadGalleriesList() {
                             <div class="col-md-6 col-lg-4 mb-4">
                                 <div class="card gallery-card h-100" style="cursor: pointer;" onclick="showGalleryUnits('${gallery.id}')">
                                     <div class="card-body">
-                                        <h6 class="card-title text-primary mb-3">
-                                            <i class="bi bi-collection me-2"></i>
-                                            ${gallery.name}
-                                        </h6>
-                                        <div class="row text-center mb-3">
-                                            <div class="col-3">
-                                                <div class="text-success">
-                                                    <strong>${workingUnits}</strong>
-                                                    <br><small>Çalışan</small>
+                                        <div class="d-flex justify-content-between align-items-start mb-3">
+                                            <h6 class="card-title text-primary mb-0">
+                                                <i class="bi bi-collection me-2"></i>
+                                                ${gallery.name}
+                                            </h6>
+                                            <div class="btn-group admin-only" style="display: none;">
+                                                <button class="btn btn-sm btn-outline-warning" onclick="event.stopPropagation(); showEditGalleryModal('${gallery.id}', '${gallery.name}', '${gallery.description || ''}')" title="Galeri Adını Değiştir">
+                                                    <i class="bi bi-pencil"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-danger" onclick="event.stopPropagation(); deleteGallery('${gallery.id}', '${gallery.name}')" title="Galeri Sil">
+                                                    <i class="bi bi-trash3"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div style="display: table; width: 100%; table-layout: fixed; height: 60px; margin-bottom: 1rem;">
+                                            <div style="display: table-cell; vertical-align: middle; text-align: center; height: 60px;">
+                                                <div class="text-success" style="display: inline-block; vertical-align: middle;">
+                                                    <div style="font-size: 1.4rem; font-weight: bold; line-height: 1.2; margin-bottom: 2px;">${workingUnits}</div>
+                                                    <div style="font-size: 0.75rem; line-height: 1;">Çalışan</div>
                                                 </div>
                                             </div>
-                                            <div class="col-3">
-                                                <div class="text-danger">
-                                                    <strong>${faultyUnits}</strong>
-                                                    <br><small>Arızalı</small>
+                                            <div style="display: table-cell; vertical-align: middle; text-align: center; height: 60px;">
+                                                <div class="text-danger" style="display: inline-block; vertical-align: middle;">
+                                                    <div style="font-size: 1.4rem; font-weight: bold; line-height: 1.2; margin-bottom: 2px;">${faultyUnits}</div>
+                                                    <div style="font-size: 0.75rem; line-height: 1;">Arızalı</div>
                                                 </div>
                                             </div>
-                                            <div class="col-3">
-                                                <div class="text-warning">
-                                                    <strong>${maintenanceUnits}</strong>
-                                                    <br><small>Bakımda</small>
+                                            <div style="display: table-cell; vertical-align: middle; text-align: center; height: 60px;">
+                                                <div class="text-warning" style="display: inline-block; vertical-align: middle;">
+                                                    <div style="font-size: 1.4rem; font-weight: bold; line-height: 1.2; margin-bottom: 2px;">${maintenanceUnits}</div>
+                                                    <div style="font-size: 0.75rem; line-height: 1;">Bakımda</div>
                                                 </div>
                                             </div>
-                                            <div class="col-3">
-                                                <div class="text-info">
-                                                    <strong>${totalUnits}</strong>
-                                                    <br><small>Toplam</small>
+                                            <div style="display: table-cell; vertical-align: middle; text-align: center; height: 60px;">
+                                                <div class="text-info" style="display: inline-block; vertical-align: middle;">
+                                                    <div style="font-size: 1.4rem; font-weight: bold; line-height: 1.2; margin-bottom: 2px;">${totalUnits}</div>
+                                                    <div style="font-size: 0.75rem; line-height: 1;">Toplam</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -898,6 +920,9 @@ async function loadGalleriesList() {
         }
 
         dashboardDebug('Galeriler listesi yüklendi:', galleries.length);
+        
+        // Admin butonlarını göster
+        showAdminButtons();
 
     } catch (error) {
         console.error('Galeriler listesi yüklenirken hata:', error);
@@ -958,6 +983,9 @@ async function loadGalleryUnitsList(galleryId) {
         
         const gallery = galleryDoc.data();
         galleryUnitsTitleElement.textContent = `${gallery.name} - Üniteler`;
+        
+        // Galeri ID'sini sakla
+        document.getElementById('galleryUnitsModal').setAttribute('data-gallery-id', galleryId);
         
         // Üniteleri kontrol et
         if (!gallery.units || gallery.units.length === 0) {
@@ -1033,18 +1061,20 @@ async function loadGalleryUnitsList(galleryId) {
                         Üniteler
                     </h6>
                     <div class="section-actions">
-                        <button class="btn btn-sm btn-outline-secondary" onclick="filterGalleryUnits('all')">
-                            <i class="bi bi-funnel"></i> Tümü
-                        </button>
-                        <button class="btn btn-sm btn-outline-success" onclick="filterGalleryUnits('working')">
-                            <i class="bi bi-check-circle"></i> Çalışan
-                        </button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="filterGalleryUnits('faulty')">
-                            <i class="bi bi-exclamation-triangle"></i> Arızalı
-                        </button>
-                        <button class="btn btn-sm btn-outline-warning" onclick="filterGalleryUnits('maintenance')">
-                            <i class="bi bi-tools"></i> Bakımda
-                        </button>
+                        <div class="btn-group me-2" role="group">
+                            <button class="btn btn-sm btn-outline-secondary" onclick="filterGalleryUnits('all')">
+                                <i class="bi bi-funnel"></i> Tümü
+                            </button>
+                            <button class="btn btn-sm btn-outline-success" onclick="filterGalleryUnits('working')">
+                                <i class="bi bi-check-circle"></i> Çalışan
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="filterGalleryUnits('faulty')">
+                                <i class="bi bi-exclamation-triangle"></i> Arızalı
+                            </button>
+                            <button class="btn btn-sm btn-outline-warning" onclick="filterGalleryUnits('maintenance')">
+                                <i class="bi bi-tools"></i> Bakımda
+                            </button>
+                        </div>
                     </div>
                 </div>
                 
@@ -1098,9 +1128,14 @@ async function loadGalleryUnitsList(galleryId) {
                                             </div>
                                         </td>
                                         <td>
-                                            <button class="btn btn-sm btn-primary" onclick="openUnitDetails('${galleryId}', '${unit.id}')">
-                                                <i class="bi bi-eye"></i> Görüntüle
-                                            </button>
+                                            <div class="btn-group" role="group">
+                                                <button class="btn btn-sm btn-primary" onclick="openUnitDetails('${galleryId}', '${unit.id}')">
+                                                    <i class="bi bi-eye"></i> Görüntüle
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-danger admin-only" onclick="deleteUnit('${galleryId}', '${unit.id}', '${unit.name}')" title="Ünite Sil" style="display: none;">
+                                                    <i class="bi bi-trash3"></i>
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 `;
@@ -1130,6 +1165,9 @@ async function loadGalleryUnitsList(galleryId) {
         
         dashboardDebug('Galeri üniteleri listesi yüklendi:', gallery.units.length);
         
+        // Admin butonlarını göster
+        showAdminButtons();
+        
     } catch (error) {
         console.error('Galeri üniteleri listesi yüklenirken hata:', error);
         const galleryUnitsListElement = document.getElementById('galleryUnitsList');
@@ -1139,6 +1177,492 @@ async function loadGalleryUnitsList(galleryId) {
                 Galeri üniteleri yüklenirken bir hata oluştu: ${error.message}
             </div>
         `;
+    }
+}
+
+// Galeri üniteleri modalından ünite ekleme modalını göster
+function showAddUnitModalFromGallery() {
+    // Galeri ID'sini al
+    const galleryId = document.getElementById('galleryUnitsModal').getAttribute('data-gallery-id');
+    
+    if (!galleryId) {
+        alert('Galeri ID bulunamadı!');
+        return;
+    }
+    
+    // Galeri üniteleri modalını kapat
+    const galleryUnitsModal = bootstrap.Modal.getInstance(document.getElementById('galleryUnitsModal'));
+    if (galleryUnitsModal) {
+        galleryUnitsModal.hide();
+    }
+    
+    // Ünite ekleme modalını aç
+    const addUnitModal = new bootstrap.Modal(document.getElementById('addUnitModal'));
+    addUnitModal.show();
+    
+    // Galeri ID'sini sakla
+    document.getElementById('addUnitModal').setAttribute('data-gallery-id', galleryId);
+    
+    // Modal'ın nereden açıldığını işaretle
+    document.getElementById('addUnitModal').setAttribute('data-opened-from', 'galleryUnits');
+    
+    // Formu temizle
+    const form = document.getElementById('addUnitForm');
+    if (form) form.reset();
+    
+    // Dosya önizlemelerini temizle
+    const imagePreview = document.getElementById('selectedImagesPreview');
+    const documentPreview = document.getElementById('selectedDocumentsPreview');
+    if (imagePreview) imagePreview.innerHTML = '';
+    if (documentPreview) documentPreview.innerHTML = '';
+    
+    // Dosya seçimi event listener'larını ekle
+    setupFilePreviewListeners();
+}
+
+// Ünite ekleme modalını göster
+function showAddUnitModal(galleryId) {
+    // Galeriler modalını kapat
+    const galleriesModal = bootstrap.Modal.getInstance(document.getElementById('galleriesModal'));
+    if (galleriesModal) {
+        galleriesModal.hide();
+    }
+    
+    // Galeri üniteler modalını kapat (eğer açıksa)
+    const galleryUnitsModal = bootstrap.Modal.getInstance(document.getElementById('galleryUnitsModal'));
+    if (galleryUnitsModal) {
+        galleryUnitsModal.hide();
+    }
+    
+
+    
+    // Ünite ekleme modalını aç
+    const addUnitModal = new bootstrap.Modal(document.getElementById('addUnitModal'));
+    addUnitModal.show();
+    
+    // Galeri ID'sini sakla
+    document.getElementById('addUnitModal').setAttribute('data-gallery-id', galleryId);
+    
+    // Modal'ın nereden açıldığını işaretle
+    document.getElementById('addUnitModal').setAttribute('data-opened-from', 'gallery');
+    
+    // Formu temizle
+    const form = document.getElementById('addUnitForm');
+    if (form) form.reset();
+    
+    // Dosya önizlemelerini temizle
+    const imagePreview = document.getElementById('selectedImagesPreview');
+    const documentPreview = document.getElementById('selectedDocumentsPreview');
+    if (imagePreview) imagePreview.innerHTML = '';
+    if (documentPreview) documentPreview.innerHTML = '';
+    
+    // Dosya seçimi event listener'larını ekle
+    setupFilePreviewListeners();
+}
+
+// Dosya önizleme event listener'larını kur
+// Dosyayı Base64 formatına çevir
+function convertFileToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            resolve(e.target.result);
+        };
+        reader.onerror = function(error) {
+            reject(error);
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+function setupFilePreviewListeners() {
+    // Görsel dosyaları önizleme
+    const imageInput = document.getElementById('unitImages');
+    const imagePreview = document.getElementById('selectedImagesPreview');
+    
+    if (!imageInput || !imagePreview) {
+        console.warn('Görsel input elemanları bulunamadı');
+        return;
+    }
+    
+    imageInput.addEventListener('change', function(e) {
+        imagePreview.innerHTML = '';
+        const files = Array.from(e.target.files);
+        
+        if (files.length > 0) {
+            const previewContainer = document.createElement('div');
+            previewContainer.className = 'row g-2 mt-1';
+            
+            files.forEach((file, index) => {
+                // Dosya boyutu kontrolü (5MB)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert(`${file.name} dosyası çok büyük! Maksimum 5MB olmalıdır.`);
+                    return;
+                }
+                
+                // Dosya tipini kontrol et
+                if (!file.type.startsWith('image/')) {
+                    alert(`${file.name} geçerli bir görsel dosyası değil!`);
+                    return;
+                }
+                
+                const col = document.createElement('div');
+                col.className = 'col-md-3';
+                
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <div class="card-body p-2 text-center">
+                        <i class="bi bi-image text-primary" style="font-size: 2rem;"></i>
+                        <div class="small text-truncate mt-1" title="${file.name}">${file.name}</div>
+                        <div class="small text-muted">${(file.size / 1024).toFixed(1)} KB</div>
+                    </div>
+                `;
+                
+                col.appendChild(card);
+                previewContainer.appendChild(col);
+            });
+            
+            imagePreview.appendChild(previewContainer);
+        }
+    });
+    
+    // Doküman dosyaları önizleme
+    const documentInput = document.getElementById('unitDocuments');
+    const documentPreview = document.getElementById('selectedDocumentsPreview');
+    
+    if (!documentInput || !documentPreview) {
+        console.warn('Doküman input elemanları bulunamadı');
+        return;
+    }
+    
+    documentInput.addEventListener('change', function(e) {
+        documentPreview.innerHTML = '';
+        const files = Array.from(e.target.files);
+        
+        if (files.length > 0) {
+            const previewContainer = document.createElement('div');
+            previewContainer.className = 'mt-2';
+            
+            files.forEach((file, index) => {
+                // Dosya boyutu kontrolü (10MB)
+                if (file.size > 10 * 1024 * 1024) {
+                    alert(`${file.name} dosyası çok büyük! Maksimum 10MB olmalıdır.`);
+                    return;
+                }
+                
+                // Dosya tipini kontrol et
+                const allowedTypes = ['.pdf', '.doc', '.docx'];
+                const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+                if (!allowedTypes.includes(fileExtension)) {
+                    alert(`${file.name} geçerli bir doküman dosyası değil! Sadece PDF, DOC, DOCX dosyaları kabul edilir.`);
+                    return;
+                }
+                
+                const docCard = document.createElement('div');
+                docCard.className = 'alert alert-info py-2 mb-2';
+                docCard.innerHTML = `
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-file-text text-info me-2"></i>
+                        <div class="flex-grow-1">
+                            <div class="small fw-medium">${file.name}</div>
+                            <div class="small text-muted">${(file.size / 1024).toFixed(1)} KB</div>
+                        </div>
+                    </div>
+                `;
+                
+                previewContainer.appendChild(docCard);
+            });
+            
+            documentPreview.appendChild(previewContainer);
+        }
+    });
+}
+
+// Yeni ünite kaydet
+async function saveNewUnit() {
+    try {
+        // Form verilerini güvenli şekilde al
+        const unitNameEl = document.getElementById('unitName');
+        const unitDescriptionEl = document.getElementById('unitDescription');
+        const unitStatusEl = document.getElementById('unitStatus');
+        const unitLocationEl = document.getElementById('unitLocation');
+        const unitTechnicalDetailsEl = document.getElementById('unitTechnicalDetails');
+        
+        if (!unitNameEl || !unitStatusEl) {
+            throw new Error('Form elemanları bulunamadı!');
+        }
+        
+        const unitName = unitNameEl.value.trim();
+        const unitDescription = unitDescriptionEl ? unitDescriptionEl.value.trim() : '';
+        const unitStatus = unitStatusEl.value;
+        const unitLocation = unitLocationEl ? unitLocationEl.value.trim() : '';
+        const unitTechnicalDetails = unitTechnicalDetailsEl ? unitTechnicalDetailsEl.value.trim() : '';
+        
+        // Dosya inputlarını güvenli şekilde al
+        const imageInput = document.getElementById('unitImages');
+        const documentInput = document.getElementById('unitDocuments');
+        const imageFiles = imageInput ? imageInput.files : [];
+        const documentFiles = documentInput ? documentInput.files : [];
+        
+        // Modal'ın nereden açıldığını kontrol et
+        const openedFrom = document.getElementById('addUnitModal').getAttribute('data-opened-from');
+        
+        // Galeri ID'sini al
+        const galleryId = document.getElementById('addUnitModal').getAttribute('data-gallery-id');
+        
+        // Validasyon
+        if (!unitName || !unitStatus || !galleryId) {
+            alert('Lütfen tüm zorunlu alanları doldurun!');
+            return;
+        }
+        
+        // Buton durumunu değiştir
+        const saveButton = document.querySelector('#addUnitModal .btn-success');
+        const originalText = saveButton.innerHTML;
+        saveButton.innerHTML = '<i class="bi bi-hourglass-split"></i> Kaydediliyor...';
+        saveButton.disabled = true;
+        
+        // Galeri dokümanını al
+        const galleryDoc = await window.db.collection('galleries').doc(galleryId).get();
+        
+        if (!galleryDoc.exists) {
+            throw new Error('Galeri bulunamadı!');
+        }
+        
+        const galleryData = galleryDoc.data();
+        const existingUnits = galleryData.units || [];
+        
+        // Otomatik ünite ID oluştur
+        const unitId = existingUnits.length > 0 
+            ? Math.max(...existingUnits.map(unit => unit.id || 0)) + 1 
+            : 1;
+        
+        // Dosyaları yükle
+        const uploadedImages = [];
+        const uploadedDocuments = [];
+        
+        // Dosyaları Base64 formatında Firestore'a kaydet
+        console.log('Dosyalar Base64 formatında işleniyor...');
+        
+        // Görselleri işle
+        for (let i = 0; i < imageFiles.length; i++) {
+            const file = imageFiles[i];
+            
+            try {
+                // Dosya boyutunu kontrol et (Firestore limiti: ~700KB Base64 için)
+                const maxSizeForBase64 = 500 * 1024; // 500KB
+                
+                if (file.size > maxSizeForBase64) {
+                    console.warn(`⚠️ ${file.name} çok büyük (${(file.size / 1024 / 1024).toFixed(2)}MB), sadece isim kaydediliyor`);
+                    
+                    uploadedImages.push({
+                        name: file.name,
+                        base64Data: '',
+                        size: file.size,
+                        type: file.type,
+                        uploadedAt: new Date().toISOString(),
+                        status: 'too_large',
+                        error: `Dosya çok büyük (${(file.size / 1024 / 1024).toFixed(2)}MB). Firestore limiti: 500KB`
+                    });
+                    continue;
+                }
+                
+                // Dosyayı Base64'e çevir
+                const base64Data = await convertFileToBase64(file);
+                
+                // Base64 boyutunu kontrol et
+                const base64Size = base64Data.length;
+                const maxBase64Size = 700 * 1024; // 700KB
+                
+                if (base64Size > maxBase64Size) {
+                    console.warn(`⚠️ ${file.name} Base64 formatında çok büyük (${(base64Size / 1024).toFixed(0)}KB), sadece isim kaydediliyor`);
+                    
+                    uploadedImages.push({
+                        name: file.name,
+                        base64Data: '',
+                        size: file.size,
+                        type: file.type,
+                        uploadedAt: new Date().toISOString(),
+                        status: 'too_large',
+                        error: `Base64 formatında çok büyük (${(base64Size / 1024).toFixed(0)}KB)`
+                    });
+                    continue;
+                }
+                
+                uploadedImages.push({
+                    name: file.name,
+                    base64Data: base64Data,
+                    size: file.size,
+                    type: file.type,
+                    uploadedAt: new Date().toISOString(),
+                    status: 'processed'
+                });
+                console.log(`✅ ${file.name} Base64 formatında hazırlandı (${(base64Size / 1024).toFixed(0)}KB)`);
+            } catch (error) {
+                console.error(`❌ ${file.name} işleme hatası:`, error);
+                
+                uploadedImages.push({
+                    name: file.name,
+                    base64Data: '',
+                    size: file.size,
+                    type: file.type,
+                    uploadedAt: new Date().toISOString(),
+                    status: 'failed',
+                    error: error.message
+                });
+            }
+        }
+        
+        // Dokümanları işle
+        for (let i = 0; i < documentFiles.length; i++) {
+            const file = documentFiles[i];
+            
+            try {
+                // Dosya boyutunu kontrol et (Firestore limiti: ~700KB Base64 için)
+                const maxSizeForBase64 = 500 * 1024; // 500KB
+                
+                if (file.size > maxSizeForBase64) {
+                    console.warn(`⚠️ ${file.name} çok büyük (${(file.size / 1024 / 1024).toFixed(2)}MB), sadece isim kaydediliyor`);
+                    
+                    uploadedDocuments.push({
+                        name: file.name,
+                        base64Data: '',
+                        size: file.size,
+                        type: file.type,
+                        uploadedAt: new Date().toISOString(),
+                        status: 'too_large',
+                        error: `Dosya çok büyük (${(file.size / 1024 / 1024).toFixed(2)}MB). Firestore limiti: 500KB`
+                    });
+                    continue;
+                }
+                
+                // Dosyayı Base64'e çevir
+                const base64Data = await convertFileToBase64(file);
+                
+                // Base64 boyutunu kontrol et
+                const base64Size = base64Data.length;
+                const maxBase64Size = 700 * 1024; // 700KB
+                
+                if (base64Size > maxBase64Size) {
+                    console.warn(`⚠️ ${file.name} Base64 formatında çok büyük (${(base64Size / 1024).toFixed(0)}KB), sadece isim kaydediliyor`);
+                    
+                    uploadedDocuments.push({
+                        name: file.name,
+                        base64Data: '',
+                        size: file.size,
+                        type: file.type,
+                        uploadedAt: new Date().toISOString(),
+                        status: 'too_large',
+                        error: `Base64 formatında çok büyük (${(base64Size / 1024).toFixed(0)}KB)`
+                    });
+                    continue;
+                }
+                
+                uploadedDocuments.push({
+                    name: file.name,
+                    base64Data: base64Data,
+                    size: file.size,
+                    type: file.type,
+                    uploadedAt: new Date().toISOString(),
+                    status: 'processed'
+                });
+                console.log(`✅ ${file.name} Base64 formatında hazırlandı (${(base64Size / 1024).toFixed(0)}KB)`);
+            } catch (error) {
+                console.error(`❌ ${file.name} işleme hatası:`, error);
+                
+                uploadedDocuments.push({
+                    name: file.name,
+                    base64Data: '',
+                    size: file.size,
+                    type: file.type,
+                    uploadedAt: new Date().toISOString(),
+                    status: 'failed',
+                    error: error.message
+                });
+            }
+        }
+        
+        // Yeni ünite objesi oluştur
+        const newUnit = {
+            id: unitId,
+            name: unitName,
+            description: unitDescription || '',
+            status: unitStatus,
+            location: unitLocation || '',
+            technicalDetails: unitTechnicalDetails || '',
+            images: uploadedImages,
+            documents: uploadedDocuments,
+            maintenanceHistory: [],
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+        
+        // Üniteyi galeri dokümanına ekle
+        const updatedUnits = [...existingUnits, newUnit];
+        
+        await window.db.collection('galleries').doc(galleryId).update({
+            units: updatedUnits,
+            updatedAt: new Date().toISOString()
+        });
+        
+        // Başarı mesajı ve dosya durumu
+        const successfulImages = uploadedImages.filter(img => img.status === 'processed').length;
+        const failedImages = uploadedImages.filter(img => img.status === 'failed').length;
+        const tooLargeImages = uploadedImages.filter(img => img.status === 'too_large').length;
+        const successfulDocs = uploadedDocuments.filter(doc => doc.status === 'processed').length;
+        const failedDocs = uploadedDocuments.filter(doc => doc.status === 'failed').length;
+        const tooLargeDocs = uploadedDocuments.filter(doc => doc.status === 'too_large').length;
+        
+        let message = 'Ünite başarıyla eklendi!';
+        if (failedImages > 0 || failedDocs > 0 || tooLargeImages > 0 || tooLargeDocs > 0) {
+            message += `\n\nDosya işleme durumu:`;
+            if (successfulImages > 0) message += `\n✅ ${successfulImages} görsel işlendi`;
+            if (failedImages > 0) message += `\n❌ ${failedImages} görsel işlenemedi`;
+            if (tooLargeImages > 0) message += `\n⚠️ ${tooLargeImages} görsel çok büyük (>500KB)`;
+            if (successfulDocs > 0) message += `\n✅ ${successfulDocs} doküman işlendi`;
+            if (failedDocs > 0) message += `\n❌ ${failedDocs} doküman işlenemedi`;
+            if (tooLargeDocs > 0) message += `\n⚠️ ${tooLargeDocs} doküman çok büyük (>500KB)`;
+            message += `\n\n📝 Büyük dosyalar sadece isim olarak kaydedildi`;
+            message += `\n💡 Önerilen dosya boyutu: Max 500KB`;
+        }
+        
+        alert(message);
+        
+        // Modal'ı kapat
+        const addUnitModal = bootstrap.Modal.getInstance(document.getElementById('addUnitModal'));
+        addUnitModal.hide();
+        
+        // Nereden açıldığına göre farklı modal aç
+        if (openedFrom === 'galleryUnits') {
+            // Galeri üniteler listesini yenile
+            await loadGalleryUnitsList(galleryId);
+            
+            // Galeri üniteler modalını tekrar aç
+            const galleryUnitsModal = new bootstrap.Modal(document.getElementById('galleryUnitsModal'));
+            galleryUnitsModal.show();
+        } else {
+            // Galeriler listesini yenile
+            await loadGalleriesList();
+            
+            // Galeriler modalını tekrar aç
+            const galleriesModal = new bootstrap.Modal(document.getElementById('galleriesModal'));
+            galleriesModal.show();
+        }
+        
+        // Dashboard'u yenile
+        await loadDashboard();
+        
+    } catch (error) {
+        console.error('Ünite eklenirken hata:', error);
+        alert('Ünite eklenirken bir hata oluştu: ' + error.message);
+    } finally {
+        // Buton durumunu geri al
+        const saveButton = document.querySelector('#addUnitModal .btn-success');
+        if (saveButton) {
+            saveButton.innerHTML = '<i class="bi bi-check-circle"></i> Ünite Ekle';
+            saveButton.disabled = false;
+        }
     }
 }
 
@@ -1178,6 +1702,62 @@ function filterGalleryUnits(status) {
             row.style.animationDelay = `${index * 50}ms`;
         });
     }, 100);
+}
+
+// Ünite silme fonksiyonu
+async function deleteUnit(galleryId, unitId, unitName) {
+    try {
+        // Onay al
+        const confirmDelete = confirm(`"${unitName}" ünitesini silmek istediğinizden emin misiniz?\n\nBu işlem geri alınamaz ve üniteye ait tüm bakım geçmişi de silinecektir.`);
+        
+        if (!confirmDelete) {
+            return;
+        }
+        
+        // Loading göster
+        const deleteButton = event.target.closest('button');
+        const originalContent = deleteButton.innerHTML;
+        deleteButton.innerHTML = '<i class="bi bi-hourglass-split"></i>';
+        deleteButton.disabled = true;
+        
+        // Galeri dokümanını al
+        const galleryDoc = await window.db.collection('galleries').doc(galleryId).get();
+        
+        if (!galleryDoc.exists) {
+            throw new Error('Galeri bulunamadı!');
+        }
+        
+        const gallery = galleryDoc.data();
+        
+        // Üniteyi listeden çıkar
+        const updatedUnits = gallery.units.filter(unit => String(unit.id) !== String(unitId));
+        
+        // Galeriyi güncelle
+        await window.db.collection('galleries').doc(galleryId).update({
+            units: updatedUnits,
+            updatedAt: new Date().toISOString()
+        });
+        
+        // Başarı mesajı
+        alert(`"${unitName}" ünitesi başarıyla silindi.`);
+        
+        // Galeri üniteleri listesini yenile
+        await loadGalleryUnitsList(galleryId);
+        
+        // Dashboard'u yenile
+        await loadDashboard();
+        
+    } catch (error) {
+        console.error('Ünite silinirken hata:', error);
+        alert('Ünite silinirken bir hata oluştu: ' + error.message);
+        
+        // Buton durumunu geri al
+        const deleteButton = event.target.closest('button');
+        if (deleteButton) {
+            deleteButton.innerHTML = '<i class="bi bi-trash3"></i>';
+            deleteButton.disabled = false;
+        }
+    }
 }
 
 // Ünite detaylarını aç
@@ -1240,4 +1820,230 @@ async function logout() {
         console.error('Çıkış yapılırken hata:', error);
         showError('Çıkış yapılırken bir hata oluştu.');
     }
+}
+
+// Admin butonlarını göster (geçici çözüm)
+function showAdminButtons() {
+    const adminButtons = document.querySelectorAll('.admin-only');
+    adminButtons.forEach(button => {
+        button.style.display = 'block';
+    });
+}
+
+
+
+// Galeri ekleme modalını göster
+function showAddGalleryModal() {
+    // Galeriler modalını kapat
+    const galleriesModal = bootstrap.Modal.getInstance(document.getElementById('galleriesModal'));
+    if (galleriesModal) {
+        galleriesModal.hide();
+    }
+    
+    // Galeri ekleme modalını aç
+    const addGalleryModal = new bootstrap.Modal(document.getElementById('addGalleryModal'));
+    addGalleryModal.show();
+    
+    // Formu temizle
+    document.getElementById('addGalleryForm').reset();
+}
+
+// Yeni galeri kaydet
+async function saveNewGallery() {
+    try {
+        // Form verilerini al
+        const galleryName = document.getElementById('galleryName').value.trim();
+        const galleryDescription = document.getElementById('galleryDescription').value.trim();
+        const galleryLocation = document.getElementById('galleryLocation').value.trim();
+        const galleryCapacity = parseInt(document.getElementById('galleryCapacity').value) || 0;
+        
+        // Validasyon
+        if (!galleryName) {
+            alert('Lütfen galeri adını girin!');
+            return;
+        }
+        
+        // Buton durumunu değiştir
+        const saveButton = document.querySelector('#addGalleryModal .btn-success');
+        const originalText = saveButton.innerHTML;
+        saveButton.innerHTML = '<i class="bi bi-hourglass-split"></i> Kaydediliyor...';
+        saveButton.disabled = true;
+        
+        // Yeni galeri objesi oluştur
+        const newGallery = {
+            name: galleryName,
+            description: galleryDescription || '',
+            location: galleryLocation || '',
+            capacity: galleryCapacity,
+            units: [],
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+        
+        // Firebase'e ekle
+        await window.db.collection('galleries').add(newGallery);
+        
+        // Başarı mesajı
+        alert('Galeri başarıyla eklendi!');
+        
+        // Modal'ı kapat
+        const addGalleryModal = bootstrap.Modal.getInstance(document.getElementById('addGalleryModal'));
+        addGalleryModal.hide();
+        
+        // Galeriler listesini yenile
+        await loadGalleriesList();
+        
+        // Galeriler modalını tekrar aç
+        const galleriesModal = new bootstrap.Modal(document.getElementById('galleriesModal'));
+        galleriesModal.show();
+        
+        // Dashboard'u yenile
+        await loadDashboard();
+        
+    } catch (error) {
+        console.error('Galeri eklenirken hata:', error);
+        alert('Galeri eklenirken bir hata oluştu: ' + error.message);
+    } finally {
+        // Buton durumunu geri al
+        const saveButton = document.querySelector('#addGalleryModal .btn-success');
+        if (saveButton) {
+            saveButton.innerHTML = '<i class="bi bi-check-circle"></i> Galeri Ekle';
+            saveButton.disabled = false;
+        }
+    }
+}
+
+// Galeri düzenleme modalını göster
+// Galeri silme fonksiyonu
+async function deleteGallery(galleryId, galleryName) {
+    try {
+        // Onay al
+        const confirmDelete = confirm(`"${galleryName}" galerisini silmek istediğinizden emin misiniz?\n\nBu işlem geri alınamaz ve galeri içindeki tüm üniteler de silinecektir.`);
+        
+        if (!confirmDelete) {
+            return;
+        }
+        
+        // Loading göster
+        const deleteButton = event.target.closest('button');
+        const originalContent = deleteButton.innerHTML;
+        deleteButton.innerHTML = '<i class="bi bi-hourglass-split"></i>';
+        deleteButton.disabled = true;
+        
+        // Galeriyi sil
+        await window.db.collection('galleries').doc(galleryId).delete();
+        
+        // Başarı mesajı
+        alert(`"${galleryName}" galerisi başarıyla silindi.`);
+        
+        // Galeriler listesini yenile
+        await loadGalleriesList();
+        
+        // Dashboard'u yenile
+        await loadDashboard();
+        
+    } catch (error) {
+        console.error('Galeri silinirken hata:', error);
+        alert('Galeri silinirken bir hata oluştu: ' + error.message);
+        
+        // Buton durumunu geri al
+        const deleteButton = event.target.closest('button');
+        if (deleteButton) {
+            deleteButton.innerHTML = '<i class="bi bi-trash3"></i>';
+            deleteButton.disabled = false;
+        }
+    }
+}
+
+function showEditGalleryModal(galleryId, galleryName, galleryDescription) {
+    // Galeriler modalını kapat
+    const galleriesModal = bootstrap.Modal.getInstance(document.getElementById('galleriesModal'));
+    if (galleriesModal) {
+        galleriesModal.hide();
+    }
+    
+    // Galeri düzenleme modalını aç
+    const editGalleryModal = new bootstrap.Modal(document.getElementById('editGalleryModal'));
+    editGalleryModal.show();
+    
+    // Galeri ID'sini sakla
+    document.getElementById('editGalleryModal').setAttribute('data-gallery-id', galleryId);
+    
+    // Form alanlarını doldur
+    document.getElementById('editGalleryName').value = galleryName;
+    document.getElementById('editGalleryDescription').value = galleryDescription;
+}
+
+// Galeri değişikliklerini kaydet
+async function saveGalleryChanges() {
+    try {
+        // Form verilerini al
+        const galleryName = document.getElementById('editGalleryName').value.trim();
+        const galleryDescription = document.getElementById('editGalleryDescription').value.trim();
+        
+        // Galeri ID'sini al
+        const galleryId = document.getElementById('editGalleryModal').getAttribute('data-gallery-id');
+        
+        // Validasyon
+        if (!galleryName || !galleryId) {
+            alert('Lütfen galeri adını girin!');
+            return;
+        }
+        
+        // Buton durumunu değiştir
+        const saveButton = document.querySelector('#editGalleryModal .btn-warning');
+        const originalText = saveButton.innerHTML;
+        saveButton.innerHTML = '<i class="bi bi-hourglass-split"></i> Kaydediliyor...';
+        saveButton.disabled = true;
+        
+        // Firebase'de güncelle
+        await window.db.collection('galleries').doc(galleryId).update({
+            name: galleryName,
+            description: galleryDescription,
+            updatedAt: new Date().toISOString()
+        });
+        
+        // Başarı mesajı
+        alert('Galeri bilgileri başarıyla güncellendi!');
+        
+        // Modal'ı kapat
+        const editGalleryModal = bootstrap.Modal.getInstance(document.getElementById('editGalleryModal'));
+        editGalleryModal.hide();
+        
+        // Galeriler listesini yenile
+        await loadGalleriesList();
+        
+        // Galeriler modalını tekrar aç
+        const galleriesModal = new bootstrap.Modal(document.getElementById('galleriesModal'));
+        galleriesModal.show();
+        
+        // Dashboard'u yenile
+        await loadDashboard();
+        
+    } catch (error) {
+        console.error('Galeri güncellenirken hata:', error);
+        alert('Galeri güncellenirken bir hata oluştu: ' + error.message);
+    } finally {
+        // Buton durumunu geri al
+        const saveButton = document.querySelector('#editGalleryModal .btn-warning');
+        if (saveButton) {
+            saveButton.innerHTML = '<i class="bi bi-check-circle"></i> Kaydet';
+            saveButton.disabled = false;
+        }
+    }
+}
+
+// Galeri üniteler modalından galeriler modalına geri dön
+function goBackToGalleries() {
+    // Galeri üniteler modalını kapat
+    const galleryUnitsModal = bootstrap.Modal.getInstance(document.getElementById('galleryUnitsModal'));
+    if (galleryUnitsModal) {
+        galleryUnitsModal.hide();
+    }
+    
+    // Galeriler modalını aç
+    setTimeout(() => {
+        const galleriesModal = new bootstrap.Modal(document.getElementById('galleriesModal'));
+        galleriesModal.show();
+    }, 300); // Modal kapanma animasyonu için kısa bekleme
 }

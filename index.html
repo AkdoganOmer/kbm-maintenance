@@ -411,6 +411,7 @@
                         </div>
                     </div>
                 </div>
+
             </div>
         </div>
 
@@ -535,7 +536,12 @@
                         <i class="bi bi-collection text-info"></i>
                         Galeriler
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <div class="d-flex align-items-center">
+                        <button type="button" class="btn btn-success btn-sm me-2 admin-only" onclick="showAddGalleryModal()" style="display: none;">
+                            <i class="bi bi-plus-circle"></i> Galeri Ekle
+                        </button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
                 </div>
                 <div class="modal-body">
                     <div id="galleriesList">
@@ -558,11 +564,21 @@
         <div class="modal-dialog modal-xl">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="bi bi-boxes text-primary"></i>
-                        <span id="galleryUnitsTitle">Galeri Üniteleri</span>
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <div class="d-flex align-items-center">
+                        <button type="button" class="btn btn-outline-secondary btn-sm me-3" onclick="goBackToGalleries()">
+                            <i class="bi bi-arrow-left"></i> Geri
+                        </button>
+                        <h5 class="modal-title mb-0">
+                            <i class="bi bi-boxes text-primary"></i>
+                            <span id="galleryUnitsTitle">Galeri Üniteleri</span>
+                        </h5>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <button type="button" class="btn btn-success btn-sm me-2 admin-only" id="addUnitToGalleryBtn" onclick="showAddUnitModalFromGallery()" style="display: none;">
+                            <i class="bi bi-plus-circle"></i> Ünite Ekle
+                        </button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
                 </div>
                 <div class="modal-body">
                     <div id="galleryUnitsList">
@@ -580,6 +596,183 @@
         </div>
     </div>
 
+    <!-- Ünite Ekle Modal -->
+    <div class="modal fade" id="addUnitModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-plus-circle text-success"></i>
+                        Yeni Ünite Ekle
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addUnitForm">
+                        <div class="mb-3">
+                            <label for="unitName" class="form-label">Ünite Adı *</label>
+                            <input type="text" class="form-control" id="unitName" required placeholder="Örn: Matematik Sergisi">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="unitDescription" class="form-label">Açıklama</label>
+                            <textarea class="form-control" id="unitDescription" rows="3" placeholder="Ünite hakkında kısa açıklama..."></textarea>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="unitStatus" class="form-label">Durum *</label>
+                                    <select class="form-select" id="unitStatus" required>
+                                        <option value="">Durum Seçin</option>
+                                        <option value="Çalışıyor">Çalışıyor</option>
+                                        <option value="Arızalı">Arızalı</option>
+                                        <option value="Bakımda">Bakımda</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="unitLocation" class="form-label">Konum</label>
+                                    <input type="text" class="form-control" id="unitLocation" placeholder="Örn: Kat 1, Bölüm A">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="unitTechnicalDetails" class="form-label">Teknik Detaylar</label>
+                            <textarea class="form-control" id="unitTechnicalDetails" rows="4" placeholder="Teknik özellikler ve detaylar..."></textarea>
+                        </div>
+                        
+                        <!-- Görsel Ekleme Bölümü -->
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label class="form-label mb-0">
+                                    <i class="bi bi-image text-primary me-2"></i>
+                                    Görsel Ekleme
+                                </label>
+                                <small class="text-muted">JPG, PNG, WEBP (Max: 500KB - Firestore limiti)</small>
+                            </div>
+                            <div class="border rounded p-3 bg-light">
+                                <input type="file" class="form-control mb-2" id="unitImages" multiple accept="image/*">
+                                <div class="form-text">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Birden fazla görsel seçebilirsiniz. Seçilen görseller ünite detaylarında görüntülenecektir.
+                                </div>
+                                <div id="selectedImagesPreview" class="mt-2"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Teknik Doküman Ekleme Bölümü -->
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label class="form-label mb-0">
+                                    <i class="bi bi-file-text text-success me-2"></i>
+                                    Teknik Doküman Ekleme
+                                </label>
+                                <small class="text-muted">PDF, DOC, DOCX (Max: 500KB - Firestore limiti)</small>
+                            </div>
+                            <div class="border rounded p-3 bg-light">
+                                <input type="file" class="form-control mb-2" id="unitDocuments" multiple accept=".pdf,.doc,.docx">
+                                <div class="form-text">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Teknik dokümanlar, kullanım kılavuzları ve bakım talimatları ekleyebilirsiniz.
+                                </div>
+                                <div id="selectedDocumentsPreview" class="mt-2"></div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="button" class="btn btn-success" onclick="saveNewUnit()">
+                        <i class="bi bi-check-circle"></i> Ünite Ekle
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Galeri Ekle Modal -->
+    <div class="modal fade" id="addGalleryModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-plus-circle text-success"></i>
+                        Yeni Galeri Ekle
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addGalleryForm">
+                        <div class="mb-3">
+                            <label for="galleryName" class="form-label">Galeri Adı *</label>
+                            <input type="text" class="form-control" id="galleryName" required placeholder="Örn: Matematik Galerisi">
+                        </div>
+                        <div class="mb-3">
+                            <label for="galleryDescription" class="form-label">Açıklama</label>
+                            <textarea class="form-control" id="galleryDescription" rows="3" placeholder="Galeri hakkında kısa açıklama..."></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="galleryLocation" class="form-label">Konum</label>
+                                    <input type="text" class="form-control" id="galleryLocation" placeholder="Örn: Zemin Kat, A Blok">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="galleryCapacity" class="form-label">Kapasite</label>
+                                    <input type="number" class="form-control" id="galleryCapacity" placeholder="Maksimum ünite sayısı">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="button" class="btn btn-success" onclick="saveNewGallery()">
+                        <i class="bi bi-check-circle"></i> Galeri Ekle
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Galeri Adını Değiştir Modal -->
+    <div class="modal fade" id="editGalleryModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-pencil text-warning"></i>
+                        Galeri Adını Değiştir
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editGalleryForm">
+                        <div class="mb-3">
+                            <label for="editGalleryName" class="form-label">Yeni Galeri Adı *</label>
+                            <input type="text" class="form-control" id="editGalleryName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editGalleryDescription" class="form-label">Açıklama</label>
+                            <textarea class="form-control" id="editGalleryDescription" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="button" class="btn btn-warning" onclick="saveGalleryChanges()">
+                        <i class="bi bi-check-circle"></i> Kaydet
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -591,6 +784,7 @@
 
     <!-- Custom JS -->
     <script src="firebase-config.js"></script>
+    <!-- offline-data.js kaldırıldı - Firebase kullanılıyor -->
     <script>
         // Firebase'i başlat
         firebase.initializeApp(firebaseConfig);
@@ -613,7 +807,7 @@
         window.auth = auth;
         window.db = db;
     </script>
-    <script src="auth.js"></script>
+    <!-- <script src="auth.js"></script> -->
     <script src="script.js"></script>
 </body>
 </html> 

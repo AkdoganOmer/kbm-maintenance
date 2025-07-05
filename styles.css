@@ -267,6 +267,52 @@ body {
     color: #0dcaf0 !important;
 }
 
+/* Gallery modal statistics fix - Table approach */
+.gallery-card .row.text-center {
+    display: table !important;
+    width: 100% !important;
+    table-layout: fixed !important;
+    margin-bottom: 1rem !important;
+    height: 60px !important;
+}
+
+.gallery-card .row.text-center > div {
+    display: table-cell !important;
+    vertical-align: middle !important;
+    text-align: center !important;
+    height: 60px !important;
+}
+
+.gallery-card .row.text-center > div > div {
+    display: inline-block !important;
+    vertical-align: middle !important;
+}
+
+.gallery-card .row.text-center strong {
+    font-size: 1.4rem !important;
+    line-height: 1.2 !important;
+    font-weight: bold !important;
+    display: block !important;
+    margin-bottom: 2px !important;
+}
+
+.gallery-card .row.text-center small {
+    font-size: 0.75rem !important;
+    line-height: 1 !important;
+    display: block !important;
+    white-space: nowrap !important;
+    margin-top: 0 !important;
+}
+
+/* Gallery card genel düzenleme */
+.gallery-card {
+    min-height: 180px !important;
+}
+
+.gallery-card .card-body {
+    padding: 1rem !important;
+}
+
 /* All Units Modal Styles */
 .stats-overview {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -1203,4 +1249,27 @@ body {
 
 .admin-only.show.btn {
     display: inline-block;
-} 
+}
+
+/* Görsel hover efekti ve modal için */
+.unit-image img {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.unit-image img:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+/* Görsel modal stilleri */
+#imageModal .modal-body {
+    padding: 0;
+    background-color: #000;
+}
+
+#imageModal .modal-body img {
+    max-width: 100%;
+    max-height: 80vh;
+    object-fit: contain;
+}
