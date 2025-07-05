@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ünite Güncelleme - KBMSERGİ Bakım Takip Sistemi</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="styles.css" rel="stylesheet">
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
+    <!-- Firebase Config -->
+    <script src="firebase-config.js"></script>
+
+    <!-- Auth -->
+    <script src="auth.js"></script>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Update Script -->
+    <script src="update-all-units.js"></script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <i class="bi bi-building-gear"></i>
+                KBMSERGİ
+            </a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">
+                            <i class="bi bi-house"></i>
+                            Ana Sayfa
+                        </a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center">
+                    <div id="userInfo" class="text-light"></div>
+                    <button class="btn btn-outline-light ms-3" onclick="logout()">
+                        <i class="bi bi-box-arrow-right"></i>
+                        Çıkış
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-warning text-dark">
+                        <h4 class="mb-0">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            ÜNİTE GÜNCELLEME PANELİ
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-danger">
+                            <h5><i class="bi bi-exclamation-triangle me-2"></i>DİKKAT!</h5>
+                            <p class="mb-0">Bu işlem tüm ünitelerin teknik detaylarını ve bakım talimatlarını Denizaltı ünitesiyle aynı yapacaktır. Bu işlem geri alınamaz!</p>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card border-primary">
+                                    <div class="card-header bg-primary text-white">
+                                        <h5 class="mb-0">
+                                            <i class="bi bi-gear me-2"></i>
+                                            Tüm Üniteleri Güncelle
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <p>Bu buton tüm galerilerdeki tüm üniteleri Denizaltı ünitesiyle aynı yapacaktır.</p>
+                                        <button class="btn btn-danger btn-lg w-100" onclick="confirmUpdateAll()">
+                                            <i class="bi bi-arrow-clockwise me-2"></i>
+                                            TÜM ÜNİTELERİ GÜNCELLE
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="card border-success">
+                                    <div class="card-header bg-success text-white">
+                                        <h5 class="mb-0">
+                                            <i class="bi bi-collection me-2"></i>
+                                            Galeri Seçerek Güncelle
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <p>Belirli bir galeriyi seçerek sadece o galerideki üniteleri güncelleyin.</p>
+                                        <select class="form-select mb-3" id="gallerySelect">
+                                            <option value="">Galeri seçin...</option>
+                                        </select>
+                                        <button class="btn btn-success btn-lg w-100" onclick="confirmUpdateGallery()" disabled id="updateGalleryBtn">
+                                            <i class="bi bi-arrow-clockwise me-2"></i>
+                                            SEÇİLİ GALERİYİ GÜNCELLE
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">
+                                        <i class="bi bi-info-circle me-2"></i>
+                                        Denizaltı Ünitesi Örnek Verileri
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h6>Teknik Özellikler:</h6>
+                                            <ul class="list-unstyled">
+                                                <li>• Hidrolik sistem ile su altında hareket simülasyonu</li>
+                                                <li>• Elektronik kontrol sistemi</li>
+                                                <li>• Ses efektleri ve görsel animasyonlar</li>
+                                                <li>• PLC Kontrol Ünitesi (Siemens S7-1200)</li>
+                                                <li>• Dokunmatik Ekran (10 inç)</li>
+                                                <li>• Güç: 220V AC, 50Hz</li>
+                                                <li>• Güç Tüketimi: 2.5 kW</li>
+                                            </ul>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6>Bakım Talimatları:</h6>
+                                            <ul class="list-unstyled">
+                                                <li>• Günlük: Genel temizlik ve çalışma kontrolü</li>
+                                                <li>• Haftalık: Hidrolik sistem ve elektronik kontrol</li>
+                                                <li>• Aylık: Detaylı kontrol ve performans testi</li>
+                                                <li>• Yıllık: Kapsamlı bakım ve kalibrasyon</li>
+                                                <li>• Güvenlik sistemleri kontrolü</li>
+                                                <li>• Sensör kalibrasyonu</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal fade" id="confirmModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        Son Onay
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>Bu işlem geri alınamaz!</strong></p>
+                    <p>Seçilen ünitelerin teknik detayları ve bakım talimatları Denizaltı ünitesiyle aynı yapılacaktır.</p>
+                    <p>Devam etmek istediğinizden emin misiniz?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i>
+                        İptal
+                    </button>
+                    <button type="button" class="btn btn-danger" id="confirmButton">
+                        <i class="bi bi-check-circle me-1"></i>
+                        Evet, Güncelle
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sayfa yüklendiğinde çalışacak
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // Firebase'in yüklenmesini bekle
+                await new Promise((resolve, reject) => {
+                    const checkFirebase = setInterval(() => {
+                        if (typeof firebase !== 'undefined' && firebase.apps.length > 0 && window.db) {
+                            clearInterval(checkFirebase);
+                            resolve();
+                        }
+                    }, 100);
+
+                    setTimeout(() => {
+                        clearInterval(checkFirebase);
+                        reject(new Error('Firebase yüklenirken zaman aşımı'));
+                    }, 10000);
+                });
+
+                // Galerileri yükle
+                await loadGalleries();
+
+            } catch (error) {
+                console.error('Sayfa başlatılırken hata:', error);
+                alert('Sayfa yüklenirken bir hata oluştu: ' + error.message);
+            }
+        });
+
+        // Galerileri yükle
+        async function loadGalleries() {
+            try {
+                const galleriesSnapshot = await window.db.collection('galleries').get();
+                const gallerySelect = document.getElementById('gallerySelect');
+                
+                galleriesSnapshot.forEach(doc => {
+                    const gallery = doc.data();
+                    const option = document.createElement('option');
+                    option.value = doc.id;
+                    option.textContent = gallery.name;
+                    gallerySelect.appendChild(option);
+                });
+
+                // Galeri seçimi değiştiğinde butonu aktif et
+                gallerySelect.addEventListener('change', function() {
+                    const updateGalleryBtn = document.getElementById('updateGalleryBtn');
+                    updateGalleryBtn.disabled = !this.value;
+                });
+
+            } catch (error) {
+                console.error('Galeriler yüklenirken hata:', error);
+                alert('Galeriler yüklenirken bir hata oluştu: ' + error.message);
+            }
+        }
+
+        // Tüm üniteleri güncelleme onayı
+        function confirmUpdateAll() {
+            const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
+            const confirmButton = document.getElementById('confirmButton');
+            
+            confirmButton.onclick = async () => {
+                modal.hide();
+                await updateAllUnitsToDenizalti();
+            };
+            
+            modal.show();
+        }
+
+        // Galeri güncelleme onayı
+        function confirmUpdateGallery() {
+            const galleryId = document.getElementById('gallerySelect').value;
+            if (!galleryId) {
+                alert('Lütfen bir galeri seçin!');
+                return;
+            }
+
+            const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
+            const confirmButton = document.getElementById('confirmButton');
+            
+            confirmButton.onclick = async () => {
+                modal.hide();
+                await updateGalleryUnitsToDenizalti(galleryId);
+            };
+            
+            modal.show();
+        }
+    </script>
+</body>
+</html> 

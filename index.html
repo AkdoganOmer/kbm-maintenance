@@ -3,37 +3,132 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ana Sayfa - Konya Bilim Merkezi Bakım Takip Sistemi</title>
+    <title>Ana Sayfa - KBMSERGİ Bakım Takip Sistemi</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-    <!-- Custom CSS -->
-    <link href="styles.css" rel="stylesheet">
-
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-
-    <!-- Firebase Config -->
-    <script src="firebase-config.js"></script>
-
-    <!-- Auth -->
-    <script src="auth.js"></script>
-
-    <!-- Custom JS -->
-    <script src="script.js"></script>
-
     <style>
-        .navbar-brand {
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        .login-container {
+            margin-top: 5%;
+        }
+        .system-title {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #2c3e50;
+            font-size: 1.75rem;
+            font-weight: bold;
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        .card-body {
+            padding: 2.5rem;
+        }
+        .form-control {
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+        }
+        .btn-primary {
+            border-radius: 10px;
+            padding: 0.75rem;
             font-weight: 600;
+            background-color: #1e88e5;
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: #1976d2;
+        }
+        .footer-text {
+            text-align: center;
+            margin-top: 2rem;
+            color: #6c757d;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 1rem;
+        }
+        .loading .spinner-border {
+            width: 1.5rem;
+            height: 1.5rem;
+            margin-right: 0.5rem;
+        }
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .navbar-nav .nav-link {
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            margin: 0 0.25rem;
+        }
+        
+        .navbar-nav .nav-link:hover {
+            background-color: rgba(255,255,255,0.1);
+            transform: translateY(-1px);
+        }
+        
+        .navbar-nav .nav-link.active {
+            background-color: rgba(255,255,255,0.2);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         .welcome-banner {
-            background: linear-gradient(135deg, #1e88e5 0%, #1976d2 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 2rem 0;
+            padding: 3rem 0;
             margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .welcome-banner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/><circle cx="10" cy="60" r="0.5" fill="white" opacity="0.1"/><circle cx="90" cy="40" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            pointer-events: none;
+        }
+        
+        .welcome-banner .container {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .welcome-banner h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .welcome-banner p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 1.5rem;
+        }
+        
+        .welcome-stats {
+            margin-top: 1.5rem;
+        }
+        
+        .welcome-stats .badge {
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         .stats-container {
             background: #f8f9fa;
@@ -58,38 +153,168 @@
         .stat-label {
             color: #6c757d;
         }
+        .user-info {
+            display: flex;
+            align-items: center;
+            color: white;
+            font-weight: 500;
+        }
+        
+        .navbar-collapse {
+            flex-grow: 0;
+        }
+        .content-header {
+            background-color: #f8f9fa;
+            padding: 1.5rem 0;
+            margin-bottom: 2rem;
+        }
+        .stats-card {
+            transition: all 0.3s ease;
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .stats-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, rgba(255,255,255,0.3), rgba(255,255,255,0.1));
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        }
+        
+        .stats-card[onclick]:hover {
+            cursor: pointer;
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+        }
+        
+        .stats-card .card-body {
+            padding: 2rem;
+            position: relative;
+        }
+        
+        .stats-card .icon {
+            font-size: 2.5rem;
+            opacity: 0.8;
+            transition: all 0.3s ease;
+        }
+        
+        .stats-card:hover .icon {
+            transform: scale(1.1);
+            opacity: 1;
+        }
+        
+        .stats-card .stats-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin: 0.5rem 0;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .stats-card .card-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            opacity: 0.9;
+        }
+        .maintenance-table th {
+            font-weight: 600;
+            color: #495057;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border: none;
+            padding: 1rem;
+        }
+        
+        .maintenance-table td {
+            vertical-align: middle;
+            padding: 1rem;
+            border-bottom: 1px solid #f1f3f4;
+        }
+        
+        .maintenance-table tbody tr {
+            transition: all 0.3s ease;
+        }
+        
+        .maintenance-table tbody tr:hover {
+            background-color: #f8f9fa;
+            transform: scale(1.01);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .maintenance-table .badge {
+            font-size: 0.8rem;
+            padding: 0.4rem 0.8rem;
+            border-radius: 12px;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-bottom: 1px solid #f1f3f4;
+            padding: 1.5rem;
+        }
+        
+        /* Modal stilleri */
+        .modal-content {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        }
+        
+        .modal-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-bottom: 1px solid #f1f3f4;
+            border-radius: 15px 15px 0 0;
+        }
+        
+        .modal-title {
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .modal-body {
+            padding: 2rem;
+        }
+        
+        .modal-footer {
+            background: #f8f9fa;
+            border-top: 1px solid #f1f3f4;
+            border-radius: 0 0 15px 15px;
+        }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
         <div class="container">
             <a class="navbar-brand" href="index.html">
                 <i class="bi bi-building-gear"></i>
-                Sergi Birimi Bakım Takip
+                KBMSERGİ
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="index.html">
-                            <i class="bi bi-house-fill"></i> Ana Sayfa
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="galleries.html">
-                            <i class="bi bi-grid-fill"></i> Galeriler
-                        </a>
-                    </li>
-                </ul>
+            <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
                 <div class="d-flex align-items-center">
-                    <div class="text-light me-3">
-                        <i class="bi bi-person-circle"></i>
-                        <span id="userInfo"></span>
-                    </div>
-                    <button onclick="logout()" class="btn btn-outline-light">
-                        <i class="bi bi-box-arrow-right"></i> Çıkış Yap
+                    <div class="user-info me-3" id="userInfo"></div>
+                    <button class="btn btn-outline-light" onclick="logout()">
+                        <i class="bi bi-box-arrow-right"></i> Çıkış
                     </button>
                 </div>
             </div>
@@ -98,135 +323,297 @@
 
     <div class="welcome-banner">
         <div class="container">
-            <h1>Hoş Geldiniz</h1>
-            <p>Konya Bilim Merkezi Sergi Birimi Bakım Takip Sistemine hoş geldiniz.</p>
+            <h1><i class="bi bi-stars"></i> KBMSERGİ'ye Hoş Geldiniz</h1>
+            <p>Konya Bilim Merkezi Sergi Birimi Bakım Takip Sistemi</p>
+            <div class="welcome-stats">
+                <span class="badge bg-light text-dark me-2">
+                    <i class="bi bi-gear-wide-connected"></i> Bakım Takibi
+                </span>
+                <span class="badge bg-light text-dark me-2">
+                    <i class="bi bi-graph-up"></i> Performans Analizi
+                </span>
+                <span class="badge bg-light text-dark">
+                    <i class="bi bi-shield-check"></i> Güvenli Erişim
+                </span>
+            </div>
         </div>
     </div>
 
     <div class="container">
+        <!-- Hata Mesajı -->
+        <div id="dashboardError" class="alert alert-danger d-none"></div>
+
+        <div class="content-header">
+            <div class="container">
+                <h1>Sistem Durumu</h1>
+            </div>
+        </div>
+
         <div class="stats-container">
             <div class="row">
                 <div class="col-md-3">
-                    <div class="stat-item">
-                        <i class="bi bi-grid-3x3-gap-fill"></i>
-                        <div class="stat-value" id="totalGalleries">-</div>
-                        <div class="stat-label">Toplam Galeri</div>
+                    <div class="card stats-card bg-primary text-white" style="cursor: pointer;" onclick="showAllUnitsModal()">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="card-title mb-0">Toplam Ünite</h6>
+                                    <div class="stats-number" id="totalUnits">-</div>
+                                </div>
+                                <div class="icon">
+                                    <i class="bi bi-boxes"></i>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="stat-item">
-                        <i class="bi bi-box-fill"></i>
-                        <div class="stat-value" id="totalUnits">-</div>
-                        <div class="stat-label">Toplam Ünite</div>
+                    <div class="card stats-card bg-success text-white" style="cursor: pointer;" onclick="showWorkingUnitsModal()">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="card-title mb-0">Çalışan Ünite</h6>
+                                    <div class="stats-number" id="workingUnits">-</div>
+                                </div>
+                                <div class="icon">
+                                    <i class="bi bi-check-circle"></i>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="stat-item">
-                        <i class="bi bi-exclamation-triangle-fill"></i>
-                        <div class="stat-value" id="faultyUnitsCount">-</div>
-                        <div class="stat-label">Arızalı Ünite</div>
+                    <div class="card stats-card bg-danger text-white" style="cursor: pointer;" onclick="showFaultyUnitsModal()">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="card-title mb-0">Arızalı Ünite</h6>
+                                    <div class="stats-number" id="brokenUnits">-</div>
+                                </div>
+                                <div class="icon">
+                                    <i class="bi bi-exclamation-triangle"></i>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="stat-item">
-                        <i class="bi bi-tools"></i>
-                        <div class="stat-value" id="maintenanceCount">-</div>
-                        <div class="stat-label">Aylık Bakım</div>
+                    <div class="card stats-card bg-info text-white" style="cursor: pointer;" onclick="showGalleriesModal()">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="card-title mb-0">Galeri Sayısı</h6>
+                                    <div class="stats-number" id="galleryCount">-</div>
+                                </div>
+                                <div class="icon">
+                                    <i class="bi bi-grid-3x3-gap"></i>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="row">
-            <div class="col-md-6 mb-4">
-                <div class="card h-100">
-                    <div class="card-header bg-danger text-white">
-                        <h5 class="card-title mb-0">
-                            <i class="bi bi-exclamation-circle-fill"></i> Arızalı Üniteler
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div id="faultyUnits">
-                            <p class="text-muted">Yükleniyor...</p>
-                        </div>
-                    </div>
-                </div>
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0">Şu an Bakımda Olan Sergiler</h5>
             </div>
-            <div class="col-md-6 mb-4">
-                <div class="card h-100">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="card-title mb-0">
-                            <i class="bi bi-clock-history"></i> Son Bakımlar
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div id="recentMaintenance">
-                            <p class="text-muted">Yükleniyor...</p>
-                        </div>
-                    </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover maintenance-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Galeri</th>
+                                <th>Ünite</th>
+                                <th>Bakım Türü</th>
+                                <th>Başlangıç Tarihi</th>
+                                <th>Durum</th>
+                            </tr>
+                        </thead>
+                        <tbody id="maintenanceList">
+                            <tr>
+                                <td colspan="4" class="text-center">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Yükleniyor...</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Arızalı Üniteler Modal -->
+    <div class="modal fade" id="faultyUnitsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-exclamation-triangle text-danger"></i>
+                        Arızalı Üniteler
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="faultyUnitsList">
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Yükleniyor...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Çalışan Üniteler Modal -->
+    <div class="modal fade" id="workingUnitsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-check-circle text-success"></i>
+                        Çalışan Üniteler
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="workingUnitsList">
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Yükleniyor...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tüm Üniteler Modal -->
+    <div class="modal fade" id="allUnitsModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-boxes text-primary"></i>
+                        Tüm Üniteler
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="allUnitsList">
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Yükleniyor...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Galeriler Modal -->
+    <div class="modal fade" id="galleriesModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-collection text-info"></i>
+                        Galeriler
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="galleriesList">
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Yükleniyor...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Galeri Üniteleri Modal -->
+    <div class="modal fade" id="galleryUnitsModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-boxes text-primary"></i>
+                        <span id="galleryUnitsTitle">Galeri Üniteleri</span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="galleryUnitsList">
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Yükleniyor...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+
+    <!-- Bootstrap -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Custom JS -->
+    <script src="firebase-config.js"></script>
     <script>
-        // Yerel geliştirme ortamı kontrolü
-        const isLocalDev = window.location.protocol === 'file:';
-        const basePath = isLocalDev ? window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/')) : '';
-        
-        // Script yollarını ayarla
-        const loadScript = (src) => {
-            return new Promise((resolve, reject) => {
-                const script = document.createElement('script');
-                script.src = src;
-                script.onload = resolve;
-                script.onerror = reject;
-                document.body.appendChild(script);
-            });
+        // Firebase'i başlat
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Debug modu
+        window.debug = function() {
+            if (sessionStorage.getItem('debugMode') === 'true') {
+                console.log.apply(console, arguments);
+            }
         };
 
-        // Gerekli scriptleri yükle
-        async function loadScripts() {
-            if (!isLocalDev) {
-                // Canlı ortamda Firebase SDK'larını yükle
-                await Promise.all([
-                    loadScript('https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js'),
-                    loadScript('https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js'),
-                    loadScript('https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js')
-                ]);
+        // Firebase durumunu kontrol et
+        window.checkFirebaseStatus = function() {
+            return !!firebase.apps.length;
+        };
 
-                // Firebase yapılandırması
-                const firebaseConfig = {
-                    apiKey: "AIzaSyC-q-7B2IVQDRdNmUJ5K_UT-Tp2j1gZHIk",
-                    authDomain: "sergi-bakim-onarim.firebaseapp.com",
-                    projectId: "sergi-bakim-onarim",
-                    storageBucket: "sergi-bakim-onarim.appspot.com",
-                    messagingSenderId: "998277420747",
-                    appId: "1:998277420747:web:663a465d9e198a2fadad4e",
-                    measurementId: "G-7D0P08YB4W"
-                };
-
-                // Firebase'i başlat
-                if (typeof firebase !== 'undefined' && firebase.apps.length === 0) {
-                    firebase.initializeApp(firebaseConfig);
-                }
-            }
-
-            // Auth.js ve script.js'i yükle
-            await Promise.all([
-                loadScript(basePath + '/auth.js'),
-                loadScript(basePath + '/script.js')
-            ]);
-        }
-
-        // Scriptleri yükle
-        loadScripts().catch(error => {
-            console.error('Script yükleme hatası:', error);
-            alert('Sistem başlatılırken bir hata oluştu. Lütfen sayfayı yenileyin.');
-        });
+        // Global değişkenleri tanımla
+        window.auth = auth;
+        window.db = db;
     </script>
-
-    <!-- Bootstrap Bundle with Popper -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="auth.js"></script>
+    <script src="script.js"></script>
 </body>
 </html> 

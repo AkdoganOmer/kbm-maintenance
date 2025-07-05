@@ -72,14 +72,6 @@
         if (firebase.apps.length === 0) {
             firebase.initializeApp(firebaseConfig);
         }
-
-        // Firestore referansını al
-        const db = firebase.firestore();
-
-        // Firestore ayarları
-        db.settings({
-            merge: true
-        });
     </script>
     
     <!-- Auth JS -->

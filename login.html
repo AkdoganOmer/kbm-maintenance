@@ -3,22 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Giriş - Konya Bilim Merkezi Bakım Takip Sistemi</title>
+    <title>Giriş - KBMSERGİ Bakım Takip Sistemi</title>
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <style>
         body {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/><circle cx="10" cy="60" r="0.5" fill="white" opacity="0.1"/><circle cx="90" cy="40" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            pointer-events: none;
         }
         .login-container {
             margin-top: 5%;
+            position: relative;
+            z-index: 1;
         }
         .system-title {
             text-align: center;
             margin-bottom: 2rem;
-            color: #2c3e50;
-            font-size: 1.75rem;
-            font-weight: bold;
+            color: white;
+            font-size: 2rem;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .system-title i {
+            color: #ffd700;
+            margin-right: 0.5rem;
         }
         .card {
             border: none;
@@ -36,16 +60,20 @@
             border-radius: 10px;
             padding: 0.75rem;
             font-weight: 600;
-            background-color: #1e88e5;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border: none;
+            transition: all 0.3s ease;
         }
         .btn-primary:hover {
-            background-color: #1976d2;
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
         .footer-text {
             text-align: center;
             margin-top: 2rem;
-            color: #6c757d;
+            color: rgba(255,255,255,0.8);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
         }
         .loading {
             display: none;
@@ -63,7 +91,7 @@
     <div class="container login-container">
         <div class="row justify-content-center">
             <div class="col-md-5">
-                <h1 class="system-title">Konya Bilim Merkezi<br>Sergi Birimi Bakım Takip Sistemi</h1>
+                <h1 class="system-title"><i class="bi bi-stars"></i> KBMSERGİ<br>Sergi Birimi Bakım Takip Sistemi</h1>
                 <div class="card">
                     <div class="card-body">
                         <h3 class="text-center mb-4">Personel Girişi</h3>
@@ -78,7 +106,7 @@
                                 <input type="password" class="form-control" id="password" required>
                             </div>
                             <button type="submit" class="btn btn-primary w-100" id="loginButton">
-                                Giriş Yap
+                                <i class="bi bi-box-arrow-in-right"></i> Giriş Yap
                             </button>
                             <div class="loading" id="loading">
                                 <div class="spinner-border text-primary" role="status">
@@ -90,10 +118,10 @@
                         <div class="mt-4">
                             <p class="text-muted small">Test Hesapları:</p>
                             <ul class="text-muted small">
-                                <li>Admin: admin@kbm.org.tr / Admin123!</li>
-                                <li>Yönetici: manager@kbm.org.tr / Manager123!</li>
-                                <li>Teknisyen: tech@kbm.org.tr / Tech123!</li>
-                                <li>Personel: staff@kbm.org.tr / Staff123!</li>
+                                <li>Ahmet Yılmaz (Admin): admin@kbm.org.tr / Admin123!</li>
+                                <li>Fatma Demir (Yönetici): manager@kbm.org.tr / Manager123!</li>
+                                <li>Mehmet Kaya (Teknisyen): tech@kbm.org.tr / Tech123!</li>
+                                <li>Ayşe Özkan (Personel): staff@kbm.org.tr / Staff123!</li>
                             </ul>
                         </div>
                     </div>
@@ -105,89 +133,39 @@
         </div>
     </div>
 
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+
+    <!-- Bootstrap -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Custom JS -->
+    <script src="firebase-config.js"></script>
     <script>
-        // Yerel geliştirme ortamı kontrolü
-        const isLocalDev = window.location.protocol === 'file:';
-        const basePath = isLocalDev ? window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/')) : '';
-        
-        // Script yollarını ayarla
-        const loadScript = (src) => {
-            return new Promise((resolve, reject) => {
-                const script = document.createElement('script');
-                script.src = src;
-                script.onload = resolve;
-                script.onerror = reject;
-                document.body.appendChild(script);
-            });
+        // Firebase'i başlat
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Debug modu
+        window.debug = function() {
+            if (sessionStorage.getItem('debugMode') === 'true') {
+                console.log.apply(console, arguments);
+            }
         };
 
-        // Gerekli scriptleri yükle
-        async function loadScripts() {
-            if (!isLocalDev) {
-                // Canlı ortamda Firebase SDK'larını yükle
-                await Promise.all([
-                    loadScript('https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js'),
-                    loadScript('https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js'),
-                    loadScript('https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js')
-                ]);
+        // Firebase durumunu kontrol et
+        window.checkFirebaseStatus = function() {
+            return !!firebase.apps.length;
+        };
 
-                // Firebase yapılandırması
-                const firebaseConfig = {
-                    apiKey: "AIzaSyC-q-7B2IVQDRdNmUJ5K_UT-Tp2j1gZHIk",
-                    authDomain: "sergi-bakim-onarim.firebaseapp.com",
-                    projectId: "sergi-bakim-onarim",
-                    storageBucket: "sergi-bakim-onarim.appspot.com",
-                    messagingSenderId: "998277420747",
-                    appId: "1:998277420747:web:663a465d9e198a2fadad4e",
-                    measurementId: "G-7D0P08YB4W"
-                };
-
-                // Firebase'i başlat
-                if (typeof firebase !== 'undefined' && firebase.apps.length === 0) {
-                    firebase.initializeApp(firebaseConfig);
-                }
-            }
-
-            // Auth.js'i yükle
-            await loadScript(basePath + '/auth.js');
-        }
-
-        // Scriptleri yükle ve formu hazırla
-        loadScripts().then(() => {
-            const loginForm = document.getElementById('loginForm');
-            const loginButton = document.getElementById('loginButton');
-            const loadingDiv = document.getElementById('loading');
-            const errorDiv = document.getElementById('loginError');
-
-            // Giriş işlemi
-            loginForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                
-                const email = document.getElementById('email').value;
-                const password = document.getElementById('password').value;
-                
-                // UI'ı güncelle
-                loginButton.disabled = true;
-                loadingDiv.style.display = 'block';
-                errorDiv.classList.add('d-none');
-                
-                try {
-                    await login(email, password);
-                } catch (error) {
-                    console.error('Giriş hatası:', error);
-                    errorDiv.textContent = error.message || 'Giriş yapılırken bir hata oluştu.';
-                    errorDiv.classList.remove('d-none');
-                } finally {
-                    loginButton.disabled = false;
-                    loadingDiv.style.display = 'none';
-                }
-            });
-        }).catch(error => {
-            console.error('Script yükleme hatası:', error);
-            const errorDiv = document.getElementById('loginError');
-            errorDiv.textContent = 'Sistem başlatılırken bir hata oluştu. Lütfen sayfayı yenileyin.';
-            errorDiv.classList.remove('d-none');
-        });
+        // Global değişkenleri tanımla
+        window.auth = auth;
+        window.db = db;
     </script>
+    <script src="login.js"></script>
 </body>
 </html> 

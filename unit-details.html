@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ünite Detayları - Konya Bilim Merkezi Bakım Takip Sistemi</title>
+    <title>Ünite Detayları - KBMSERGİ Bakım Takip Sistemi</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
@@ -23,94 +23,144 @@
     <!-- Auth -->
     <script src="auth.js"></script>
 
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- PDF.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
+
     <!-- Custom JS -->
     <script src="unit-details.js"></script>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
         <div class="container">
             <a class="navbar-brand" href="index.html">
                 <i class="bi bi-building-gear"></i>
-                Sergi Birimi Bakım Takip
+                KBMSERGİ
             </a>
             <div class="collapse navbar-collapse">
-                <ul class="navbar-nav">
+                <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="index.html">Ana Sayfa</a>
+                        <a class="nav-link" href="index.html">
+                            <i class="bi bi-house"></i>
+                            Ana Sayfa
+                        </a>
                     </li>
                 </ul>
+                <div class="d-flex align-items-center">
+                    <div id="userInfo" class="text-light"></div>
+                    <button class="btn btn-outline-light ms-3" onclick="logout()">
+                        <i class="bi bi-box-arrow-right"></i>
+                        Çıkış
+                    </button>
+                </div>
             </div>
         </div>
     </nav>
 
     <div class="container mt-4">
-        <div class="row mb-4">
-            <div class="col">
-                <button class="btn btn-outline-secondary mb-3" onclick="goBack()">
-                    <i class="bi bi-arrow-left"></i> Geri Dön
-                </button>
-                <h2 id="unitTitle">Ünite Detayları</h2>
-            </div>
-            <div class="col text-end admin-only" style="display: none;">
-                <button class="btn btn-primary" onclick="toggleEditMode()">
-                    <i class="bi bi-pencil"></i> Düzenle
-                </button>
+        <!-- Header Section -->
+        <div class="unit-header mb-4">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <button class="btn btn-outline-primary mb-3" onclick="goBack()">
+                        <i class="bi bi-arrow-left"></i> Ana Sayfaya Dön
+                    </button>
+                    <h1 id="unitTitle" class="unit-title">Ünite Detayları</h1>
+                    <div class="unit-subtitle">
+                        <span id="galleryName" class="text-muted">
+                            <i class="bi bi-collection me-1"></i>
+                            Galeri yükleniyor...
+                        </span>
+                    </div>
+                </div>
+                <div class="col-md-4 text-end">
+                    <div class="admin-only" style="display: none;">
+                        <button class="btn btn-primary me-2" onclick="toggleEditMode()">
+                            <i class="bi bi-pencil"></i> Düzenle
+                        </button>
+                        <button class="btn btn-success" onclick="showMaintenanceModal()">
+                            <i class="bi bi-plus-circle"></i> Bakım Ekle
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
+
+
 
         <!-- View Mode -->
         <div id="viewMode">
             <div class="row">
                 <!-- Ünite Görselleri -->
-                <div class="col-md-6 mb-4">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="mb-0">Ünite Görselleri</h5>
+                <div class="col-lg-8 mb-4">
+                    <div class="card unit-images-card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="bi bi-images me-2"></i>
+                                Ünite Görselleri
+                            </h5>
+                            <button class="btn btn-sm btn-primary admin-only" onclick="showImageUploadModal()">
+                                <i class="bi bi-plus-circle me-1"></i> Görsel Ekle
+                            </button>
                         </div>
                         <div class="card-body">
-                            <div id="unitImages" class="text-center">
+                            <div id="unitImages" class="unit-images-gallery">
                                 <!-- Görseller buraya dinamik olarak eklenecek -->
-                                <p class="text-muted">Henüz görsel eklenmemiş</p>
+                                <div class="no-images-placeholder">
+                                    <i class="bi bi-images text-muted"></i>
+                                    <p class="text-muted mt-2">Henüz görsel eklenmemiş</p>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Ünite Bilgileri -->
-                <div class="col-md-6 mb-4">
-                    <div class="card">
+                <div class="col-lg-4 mb-4">
+                    <div class="card unit-info-card">
                         <div class="card-header">
-                            <h5 class="mb-0">Teknik Bilgiler</h5>
+                            <h5 class="mb-0">
+                                <i class="bi bi-info-circle me-2"></i>
+                                Ünite Bilgileri
+                            </h5>
                         </div>
                         <div class="card-body">
-                            <table class="table">
-                                <tbody>
-                                    <tr>
-                                        <th>Ünite Adı:</th>
-                                        <td id="unitName"></td>
-                                    </tr>
-                                    <tr>
-                                        <th>Galeri:</th>
-                                        <td id="galleryName"></td>
-                                    </tr>
-                                    <tr>
-                                        <th>Durum:</th>
-                                        <td id="unitStatus"></td>
-                                    </tr>
-                                    <tr>
-                                        <th>Son Bakım:</th>
-                                        <td id="lastMaintenance"></td>
-                                    </tr>
-                                    <tr id="faultyDetailsRow" style="display: none;">
-                                        <th>Arıza Sebebi:</th>
-                                        <td id="faultyReason"></td>
-                                    </tr>
-                                    <tr id="maintenanceDetailsRow" style="display: none;">
-                                        <th>Yapılacak İşlemler:</th>
-                                        <td id="maintenanceTasks"></td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                            <div class="unit-info-list">
+                                <div class="info-item">
+                                    <div class="info-label">
+                                        <i class="bi bi-calendar-check text-info"></i>
+                                        Son Bakım
+                                    </div>
+                                    <div class="info-value" id="lastMaintenance">Yükleniyor...</div>
+                                </div>
+                                
+                                <div class="info-item">
+                                    <div class="info-label">
+                                        <i class="bi bi-check-circle text-success"></i>
+                                        Durum
+                                    </div>
+                                    <div class="info-value" id="unitStatus">Yükleniyor...</div>
+                                </div>
+                                
+                                <div class="info-item" id="faultyDetailsRow" style="display: none;">
+                                    <div class="info-label">
+                                        <i class="bi bi-exclamation-triangle text-danger"></i>
+                                        Arıza Sebebi
+                                    </div>
+                                    <div class="info-value" id="faultyReason">-</div>
+                                </div>
+                                
+                                <div class="info-item" id="maintenanceDetailsRow" style="display: none;">
+                                    <div class="info-label">
+                                        <i class="bi bi-tools text-warning"></i>
+                                        Yapılacak İşlemler
+                                    </div>
+                                    <div class="info-value" id="maintenanceTasks">-</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -119,14 +169,23 @@
             <!-- Teknik Detaylar ve Bakım Talimatları -->
             <div class="row">
                 <div class="col-md-12 mb-4">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="mb-0">Teknik Detaylar ve Bakım Talimatları</h5>
+                    <div class="card technical-details-card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="bi bi-gear me-2"></i>
+                                Teknik Detaylar
+                            </h5>
+                            <button class="btn btn-sm btn-primary admin-only" onclick="showTechnicalDetailsModal()">
+                                <i class="bi bi-plus-circle me-1"></i> Teknik Detay Ekle
+                            </button>
                         </div>
                         <div class="card-body">
-                            <div id="technicalDetails">
+                            <div id="technicalDetails" class="technical-content">
                                 <!-- Teknik detaylar buraya dinamik olarak eklenecek -->
-                                <p class="text-muted">Henüz teknik detay eklenmemiş</p>
+                                <div class="no-content-placeholder">
+                                    <i class="bi bi-gear text-muted"></i>
+                                    <p class="text-muted mt-2">Henüz teknik detay eklenmemiş</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -136,14 +195,23 @@
             <!-- Teknik Dokümanlar -->
             <div class="row">
                 <div class="col-md-12 mb-4">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="mb-0">Teknik Dokümanlar</h5>
+                    <div class="card documents-card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="bi bi-file-earmark-text me-2"></i>
+                                Teknik Dokümanlar
+                            </h5>
+                            <button class="btn btn-sm btn-primary admin-only" onclick="showDocumentUploadModal()">
+                                <i class="bi bi-plus-circle me-1"></i> Doküman Ekle
+                            </button>
                         </div>
                         <div class="card-body">
-                            <div id="technicalDocuments">
+                            <div id="technicalDocuments" class="documents-list">
                                 <!-- Dokümanlar buraya dinamik olarak eklenecek -->
-                                <p class="text-muted">Henüz teknik doküman eklenmemiş</p>
+                                <div class="no-content-placeholder">
+                                    <i class="bi bi-file-earmark-text text-muted"></i>
+                                    <p class="text-muted mt-2">Henüz teknik doküman eklenmemiş</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -153,24 +221,29 @@
             <!-- Bakım Geçmişi -->
             <div class="row">
                 <div class="col-md-12 mb-4">
-                    <div class="card">
+                    <div class="card maintenance-history-card">
                         <div class="card-header d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0">Bakım Geçmişi</h5>
-                            <button class="btn btn-sm btn-primary admin-only" style="display: none;" onclick="showMaintenanceModal()">
-                                <i class="bi bi-plus-circle"></i> Yeni Bakım Ekle
+                            <h5 class="mb-0">
+                                <i class="bi bi-clock-history me-2"></i>
+                                Bakım Geçmişi
+                            </h5>
+                            <button class="btn btn-sm btn-primary admin-only" onclick="showMaintenanceModal()">
+                                <i class="bi bi-plus-circle me-1"></i> Yeni Bakım Ekle
                             </button>
                         </div>
                         <div class="card-body">
-                            <div id="maintenanceHistory">
+                            <div id="maintenanceHistory" class="maintenance-timeline">
                                 <div class="table-responsive">
-                                    <table class="table table-hover">
+                                    <table class="table table-hover maintenance-table">
                                         <thead>
                                             <tr>
-                                                <th>Tarih</th>
-                                                <th>Bakım Türü</th>
-                                                <th>Yapılan İşlemler</th>
-                                                <th>Durum</th>
-                                                <th>Teknisyen</th>
+                                                <th><i class="bi bi-calendar me-1"></i>Tarih</th>
+                                                <th><i class="bi bi-tools me-1"></i>Tür/Öncelik</th>
+                                                <th><i class="bi bi-list-check me-1"></i>İşlemler</th>
+                                                <th><i class="bi bi-check-circle me-1"></i>Durum</th>
+                                                <th><i class="bi bi-person me-1"></i>Teknisyen</th>
+                                                <th><i class="bi bi-sticky me-1"></i>Notlar</th>
+                                                <th><i class="bi bi-gear me-1"></i>İşlem</th>
                                             </tr>
                                         </thead>
                                         <tbody id="maintenanceTable">
@@ -251,39 +324,406 @@
 
     <!-- Maintenance Modal -->
     <div class="modal fade" id="maintenanceModal" tabindex="-1">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Yeni Bakım Kaydı</h5>
+                    <h5 class="modal-title">
+                        <i class="bi bi-tools me-2"></i>
+                        Bakım İşlemi
+                    </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <form id="maintenanceForm">
-                        <div class="mb-3">
-                            <label for="maintenanceType" class="form-label">Bakım Türü</label>
-                            <select class="form-select" id="maintenanceType" required>
-                                <option value="Periyodik">Periyodik Bakım</option>
-                                <option value="Arıza">Arıza Giderme</option>
-                                <option value="Kontrol">Kontrol</option>
-                            </select>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="maintenanceType" class="form-label">
+                                        <i class="bi bi-gear me-1"></i>
+                                        Bakım Türü
+                                    </label>
+                                    <select class="form-select" id="maintenanceType" required>
+                                        <option value="">Bakım türü seçin</option>
+                                        <option value="Periyodik">Periyodik Bakım</option>
+                                        <option value="Arıza">Arıza Giderme</option>
+                                        <option value="Kontrol">Kontrol</option>
+                                        <option value="Önleyici">Önleyici Bakım</option>
+                                        <option value="Acil">Acil Bakım</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="maintenancePriority" class="form-label">
+                                        <i class="bi bi-flag me-1"></i>
+                                        Öncelik
+                                    </label>
+                                    <select class="form-select" id="maintenancePriority" required>
+                                        <option value="Düşük">Düşük</option>
+                                        <option value="Normal" selected>Normal</option>
+                                        <option value="Yüksek">Yüksek</option>
+                                        <option value="Acil">Acil</option>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
+                        
                         <div class="mb-3">
-                            <label for="maintenanceActions" class="form-label">Yapılan İşlemler</label>
-                            <textarea class="form-control" id="maintenanceActions" rows="3" required></textarea>
+                            <label for="maintenanceActions" class="form-label">
+                                <i class="bi bi-list-check me-1"></i>
+                                Yapılacak İşlemler
+                            </label>
+                            <textarea class="form-control" id="maintenanceActions" rows="4" 
+                                placeholder="Bakım için yapılacak işlemleri detaylı olarak yazın..." required></textarea>
                         </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="maintenanceStatus" class="form-label">
+                                        <i class="bi bi-check-circle me-1"></i>
+                                        Durum
+                                    </label>
+                                    <select class="form-select" id="maintenanceStatus" required>
+                                        <option value="Başlatıldı">Bakım Başlatıldı</option>
+                                        <option value="Devam Ediyor">Devam Ediyor</option>
+                                        <option value="Beklemede">Beklemede</option>
+                                        <option value="Tamamlandı">Tamamlandı</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="estimatedDuration" class="form-label">
+                                        <i class="bi bi-clock me-1"></i>
+                                        Tahmini Süre
+                                    </label>
+                                    <select class="form-select" id="estimatedDuration">
+                                        <option value="">Süre seçin</option>
+                                        <option value="1 saat">1 saat</option>
+                                        <option value="2-4 saat">2-4 saat</option>
+                                        <option value="Yarım gün">Yarım gün</option>
+                                        <option value="1 gün">1 gün</option>
+                                        <option value="2-3 gün">2-3 gün</option>
+                                        <option value="1 hafta">1 hafta</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
                         <div class="mb-3">
-                            <label for="maintenanceStatus" class="form-label">Durum</label>
-                            <select class="form-select" id="maintenanceStatus" required>
-                                <option value="Tamamlandı">Tamamlandı</option>
-                                <option value="Devam Ediyor">Devam Ediyor</option>
-                                <option value="Beklemede">Beklemede</option>
-                            </select>
+                            <label for="maintenanceNotes" class="form-label">
+                                <i class="bi bi-sticky me-1"></i>
+                                Notlar
+                            </label>
+                            <textarea class="form-control" id="maintenanceNotes" rows="3" 
+                                placeholder="Ek notlar, özel talimatlar veya dikkat edilmesi gereken noktalar..."></textarea>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
-                    <button type="button" class="btn btn-primary" onclick="saveMaintenance()">Kaydet</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i>
+                        İptal
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="saveMaintenance()">
+                        <i class="bi bi-check-circle me-1"></i>
+                        Bakımı Başlat
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Maintenance Modal -->
+    <div class="modal fade" id="editMaintenanceModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-pencil-square me-2"></i>
+                        Bakım Düzenle
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editMaintenanceForm">
+                        <input type="hidden" id="editMaintenanceId">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="editMaintenanceType" class="form-label">
+                                        <i class="bi bi-gear me-1"></i>
+                                        Bakım Türü
+                                    </label>
+                                    <select class="form-select" id="editMaintenanceType" required>
+                                        <option value="">Bakım türü seçin</option>
+                                        <option value="Periyodik">Periyodik Bakım</option>
+                                        <option value="Arıza">Arıza Giderme</option>
+                                        <option value="Kontrol">Kontrol</option>
+                                        <option value="Önleyici">Önleyici Bakım</option>
+                                        <option value="Acil">Acil Bakım</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="editMaintenancePriority" class="form-label">
+                                        <i class="bi bi-flag me-1"></i>
+                                        Öncelik
+                                    </label>
+                                    <select class="form-select" id="editMaintenancePriority" required>
+                                        <option value="Düşük">Düşük</option>
+                                        <option value="Normal" selected>Normal</option>
+                                        <option value="Yüksek">Yüksek</option>
+                                        <option value="Acil">Acil</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="editMaintenanceActions" class="form-label">
+                                <i class="bi bi-list-check me-1"></i>
+                                Yapılacak İşlemler
+                            </label>
+                            <textarea class="form-control" id="editMaintenanceActions" rows="4" 
+                                placeholder="Bakım için yapılacak işlemleri detaylı olarak yazın..." required></textarea>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="editMaintenanceStatus" class="form-label">
+                                        <i class="bi bi-check-circle me-1"></i>
+                                        Durum
+                                    </label>
+                                    <select class="form-select" id="editMaintenanceStatus" required>
+                                        <option value="Başlatıldı">Bakım Başlatıldı</option>
+                                        <option value="Devam Ediyor">Devam Ediyor</option>
+                                        <option value="Beklemede">Beklemede</option>
+                                        <option value="Tamamlandı">Tamamlandı</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="editEstimatedDuration" class="form-label">
+                                        <i class="bi bi-clock me-1"></i>
+                                        Tahmini Süre
+                                    </label>
+                                    <select class="form-select" id="editEstimatedDuration">
+                                        <option value="">Süre seçin</option>
+                                        <option value="1 saat">1 saat</option>
+                                        <option value="2-4 saat">2-4 saat</option>
+                                        <option value="Yarım gün">Yarım gün</option>
+                                        <option value="1 gün">1 gün</option>
+                                        <option value="2-3 gün">2-3 gün</option>
+                                        <option value="1 hafta">1 hafta</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="editMaintenanceNotes" class="form-label">
+                                <i class="bi bi-sticky me-1"></i>
+                                Notlar
+                            </label>
+                            <textarea class="form-control" id="editMaintenanceNotes" rows="3" 
+                                placeholder="Ek notlar, özel talimatlar veya dikkat edilmesi gereken noktalar..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i>
+                        İptal
+                    </button>
+                    <button type="button" class="btn btn-warning me-2" onclick="deleteMaintenance()">
+                        <i class="bi bi-trash me-1"></i>
+                        Sil
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="updateMaintenance()">
+                        <i class="bi bi-check-circle me-1"></i>
+                        Güncelle
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PDF Viewer Modal -->
+    <div class="modal fade" id="pdfViewerModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-file-earmark-pdf me-2"></i>
+                        <span id="pdfFileName">PDF Görüntüleyici</span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="pdf-controls mb-3">
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <div class="btn-group" role="group">
+                                    <button class="btn btn-outline-primary" onclick="previousPage()" id="prevPageBtn">
+                                        <i class="bi bi-chevron-left"></i> Önceki
+                                    </button>
+                                    <button class="btn btn-outline-primary" onclick="nextPage()" id="nextPageBtn">
+                                        Sonraki <i class="bi bi-chevron-right"></i>
+                                    </button>
+                                </div>
+                                <span class="ms-3">
+                                    Sayfa <span id="pageNum">1</span> / <span id="pageCount">1</span>
+                                </span>
+                            </div>
+                            <div class="col-md-6 text-end">
+                                <div class="btn-group" role="group">
+                                    <button class="btn btn-outline-secondary" onclick="zoomOut()">
+                                        <i class="bi bi-zoom-out"></i>
+                                    </button>
+                                    <span class="btn btn-outline-secondary" id="zoomLevel">100%</span>
+                                    <button class="btn btn-outline-secondary" onclick="zoomIn()">
+                                        <i class="bi bi-zoom-in"></i>
+                                    </button>
+                                </div>
+                                <button class="btn btn-success ms-2" onclick="downloadPDF()">
+                                    <i class="bi bi-download"></i> İndir
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pdf-container">
+                        <canvas id="pdfCanvas" class="pdf-canvas"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Upload Modal -->
+    <div class="modal fade" id="imageUploadModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-images me-2"></i>
+                        Görsel Ekle
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="imageUploadForm">
+                        <div class="mb-3">
+                            <label for="imageUploadInput" class="form-label">
+                                <i class="bi bi-upload me-1"></i>
+                                Görsel Seçin
+                            </label>
+                            <input type="file" class="form-control" id="imageUploadInput" multiple accept="image/*" required>
+                            <div class="form-text">JPG, PNG formatında görseller seçebilirsiniz. (Maksimum dosya boyutu: 5MB)</div>
+                        </div>
+                        <div id="imagePreview" class="mb-3">
+                            <!-- Önizleme buraya gelecek -->
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i>
+                        İptal
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="saveImages()">
+                        <i class="bi bi-check-circle me-1"></i>
+                        Kaydet
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Technical Details Modal -->
+    <div class="modal fade" id="technicalDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-gear me-2"></i>
+                        Teknik Detay Ekle
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="technicalDetailsForm">
+                        <div class="mb-3">
+                            <label for="technicalDetailsInput" class="form-label">
+                                <i class="bi bi-gear me-1"></i>
+                                Teknik Özellikler
+                            </label>
+                            <textarea class="form-control" id="technicalDetailsInput" rows="6" 
+                                placeholder="Ünitenin teknik özelliklerini, çalışma prensibini, güç gereksinimlerini vb. detayları yazın..."></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="maintenanceInstructionsInput" class="form-label">
+                                <i class="bi bi-tools me-1"></i>
+                                Bakım Talimatları
+                            </label>
+                            <textarea class="form-control" id="maintenanceInstructionsInput" rows="6" 
+                                placeholder="Periyodik bakım için yapılması gereken işlemleri, kontrol edilmesi gereken noktaları ve dikkat edilmesi gereken hususları yazın..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i>
+                        İptal
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="saveTechnicalDetails()">
+                        <i class="bi bi-check-circle me-1"></i>
+                        Kaydet
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Document Upload Modal -->
+    <div class="modal fade" id="documentUploadModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-file-earmark-text me-2"></i>
+                        Doküman Ekle
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="documentUploadForm">
+                        <div class="mb-3">
+                            <label for="documentUploadInput" class="form-label">
+                                <i class="bi bi-upload me-1"></i>
+                                Doküman Seçin
+                            </label>
+                            <input type="file" class="form-control" id="documentUploadInput" multiple accept=".pdf,.doc,.docx" required>
+                            <div class="form-text">PDF, Word dokümanları seçebilirsiniz. (Maksimum dosya boyutu: 5MB)</div>
+                        </div>
+                        <div id="documentPreview" class="mb-3">
+                            <!-- Önizleme buraya gelecek -->
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i>
+                        İptal
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="saveDocuments()">
+                        <i class="bi bi-check-circle me-1"></i>
+                        Kaydet
+                    </button>
                 </div>
             </div>
         </div>
