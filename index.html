@@ -158,6 +158,56 @@
             align-items: center;
             color: white;
             font-weight: 500;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .user-info:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .user-info .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 0.75rem;
+            font-size: 1.2rem;
+        }
+        
+        .user-info .user-details {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.2;
+        }
+        
+        .user-info .user-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 0.125rem;
+        }
+        
+        .user-info .user-role {
+            font-size: 0.8rem;
+            opacity: 0.85;
+            font-weight: 400;
+        }
+        
+        .user-info .role-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.125rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
         }
         
         .navbar-collapse {
@@ -312,10 +362,14 @@
             </button>
             <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
                 <div class="d-flex align-items-center">
-                    <div class="user-info me-3" id="userInfo">
-                        <i class="bi bi-person-circle me-1"></i>
-                        <span class="user-name">Kullanıcı</span>
-                        <small class="d-block user-role text-light opacity-75">Personel</small>
+                    <div class="user-info me-3" id="userInfo" onclick="showUserProfileModal()" style="cursor: pointer;" title="Profili düzenle">
+                        <div class="user-avatar">
+                            <i class="bi bi-person-fill"></i>
+                        </div>
+                        <div class="user-details">
+                            <span class="user-name">Kullanıcı</span>
+                            <span class="user-role">Personel</span>
+                        </div>
                     </div>
                     <button class="btn btn-outline-light" onclick="logout()">
                         <i class="bi bi-box-arrow-right"></i> Çıkış
@@ -1004,6 +1058,76 @@
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
                     <button type="button" class="btn btn-warning" onclick="savePersonnelChanges()">
                         <i class="bi bi-check-circle"></i> Değişiklikleri Kaydet
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kullanıcı Profil Modal -->
+    <div class="modal fade" id="userProfileModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-person-circle text-primary"></i>
+                        Profil Düzenle
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Hata Mesajı Alanı -->
+                    <div id="profileErrorAlert" class="alert alert-danger d-none"></div>
+                    
+                    <form id="userProfileForm">
+                        <div class="text-center mb-4">
+                            <div class="user-profile-avatar">
+                                <i class="bi bi-person-circle" style="font-size: 4rem; color: #6c757d;"></i>
+                            </div>
+                            <h6 class="mt-2 mb-0" id="profileUserName">Kullanıcı Adı</h6>
+                            <small class="text-muted" id="profileUserRole">Pozisyon</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="profileName" class="form-label">Ad Soyad</label>
+                            <input type="text" class="form-control" id="profileName" readonly>
+                            <small class="text-muted">Ad soyadınızı değiştirmek için yöneticinizle iletişime geçin.</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="profileUsername" class="form-label">Kullanıcı Adı</label>
+                            <input type="text" class="form-control" id="profileUsername" readonly>
+                            <small class="text-muted">Kullanıcı adınızı değiştirmek için yöneticinizle iletişime geçin.</small>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="mb-3">
+                            <label for="currentPassword" class="form-label">Mevcut Şifre *</label>
+                            <input type="password" class="form-control" id="currentPassword" required placeholder="Mevcut şifrenizi girin">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="newPassword" class="form-label">Yeni Şifre *</label>
+                            <input type="password" class="form-control" id="newPassword" required placeholder="Yeni şifrenizi girin">
+                            <div class="form-text">Şifreniz en az 6 karakter olmalıdır.</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="confirmPassword" class="form-label">Yeni Şifre Tekrar *</label>
+                            <input type="password" class="form-control" id="confirmPassword" required placeholder="Yeni şifrenizi tekrar girin">
+                        </div>
+                        
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            <strong>Dikkat:</strong> Şifrenizi değiştirdikten sonra tekrar giriş yapmanız gerekecektir.
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="button" class="btn btn-primary" onclick="updateUserPassword()">
+                        <i class="bi bi-shield-lock"></i> Şifreyi Güncelle
                     </button>
                 </div>
             </div>

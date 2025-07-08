@@ -154,7 +154,6 @@ function updateAdminUI() {
 // Kullanıcı bilgilerini güncelle
 function updateUserInfo() {
     const userName = sessionStorage.getItem('userName') || 'Kullanıcı';
-    const userRole = getUserRole();
     
     // Kullanıcı adı gösterimi
     const userNameElements = document.querySelectorAll('.user-name');
@@ -162,27 +161,10 @@ function updateUserInfo() {
         element.textContent = userName;
     });
     
-    // Kullanıcı rolü gösterimi
+    // Kullanıcı rolü gösterimini gizle - sadece kullanıcı adını göster
     const userRoleElements = document.querySelectorAll('.user-role');
     userRoleElements.forEach(element => {
-        let roleText = '';
-        switch(userRole) {
-            case USER_ROLES.ADMIN:
-                roleText = 'Sistem Yöneticisi';
-                break;
-            case USER_ROLES.MANAGER:
-                roleText = 'Yönetici';
-                break;
-            case USER_ROLES.TECHNICIAN:
-                roleText = 'Teknisyen';
-                break;
-            case USER_ROLES.STAFF:
-                roleText = 'Personel';
-                break;
-            default:
-                roleText = 'Bilinmeyen';
-        }
-        element.textContent = roleText;
+        element.style.display = 'none';
     });
 }
 

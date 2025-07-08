@@ -63,13 +63,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         // Kullanıcı bilgilerini al ve göster
         const userData = JSON.parse(sessionStorage.getItem('userData') || '{}');
-        debugLog('Kullanıcı oturum açmış:', userData.email);
+        const userEmail = sessionStorage.getItem('userEmail') || userData.email;
+        debugLog('Kullanıcı oturum açmış:', userEmail);
 
-        // Kullanıcı bilgilerini göster
-        updateUserInfo(userData);
+        // Kullanıcı bilgilerini göster (sessionStorage'dan otomatik alacak)
+        updateUserInfo();
         
-        // Admin UI'ı güncelle
-        updateAdminUI(userData);
+        // Admin UI'ı güncelle (sessionStorage'dan otomatik alacak)
+        updateAdminUI();
 
         // Event listener'ları ayarla
         setupEventListeners();
@@ -1928,14 +1929,22 @@ async function uploadDocuments(files) {
 // Kullanıcı bilgilerini güncelle
 function updateUserInfo(userData) {
     const userInfoElement = document.getElementById('userInfo');
-    if (userInfoElement && userData) {
-        const roleText = getRoleText(userData.role);
+    if (userInfoElement) {
+        // userData parametresi varsa kullan, yoksa sessionStorage'dan al
+        let userName;
+        
+        if (userData && userData.name) {
+            userName = userData.name;
+        } else {
+            // SessionStorage'dan al (auth.js ile uyumlu)
+            userName = sessionStorage.getItem('userName') || 'Kullanıcı';
+        }
+        
         userInfoElement.innerHTML = `
-            <span class="me-2">
+            <span class="text-light">
                 <i class="bi bi-person-circle me-1"></i>
-                ${userData.name || 'Kullanıcı'}
+                ${userName}
             </span>
-            <small class="text-light opacity-75">(${roleText})</small>
         `;
     }
 }
@@ -1943,7 +1952,16 @@ function updateUserInfo(userData) {
 // Admin UI'ı güncelle  
 function updateAdminUI(userData) {
     const adminElements = document.querySelectorAll('.admin-only');
-    const isAdmin = userData && (userData.role === 'admin' || userData.role === 'manager');
+    
+    // userData parametresi varsa kullan, yoksa sessionStorage'dan al
+    let userRole;
+    if (userData && userData.role) {
+        userRole = userData.role;
+    } else {
+        userRole = sessionStorage.getItem('userRole') || 'staff';
+    }
+    
+    const isAdmin = userRole === 'admin' || userRole === 'manager';
     
     adminElements.forEach(element => {
         element.style.display = isAdmin ? '' : 'none';

@@ -39,8 +39,10 @@ function checkAuthentication() {
 
 // Kullanıcı bilgilerini güncelle
 function updateUserInfo() {
+    // SessionStorage'dan kullanıcı adını al (auth.js ile uyumlu)
     const userName = sessionStorage.getItem('userName') || 'Kullanıcı';
-    const userRole = sessionStorage.getItem('userRole') || 'staff';
+    
+    debug('updateUserInfo called:', { userName });
     
     // Kullanıcı adı gösterimi
     const userNameElements = document.querySelectorAll('.user-name');
@@ -48,32 +50,49 @@ function updateUserInfo() {
         element.textContent = userName;
     });
     
-    // Kullanıcı rolü gösterimi
+    // Rol bilgisini gizle - sadece kullanıcı adını göster
     const userRoleElements = document.querySelectorAll('.user-role');
     userRoleElements.forEach(element => {
-        let roleText = '';
-        switch(userRole) {
-            case 'admin':
-                roleText = 'Sistem Yöneticisi';
-                break;
-            case 'manager':
-                roleText = 'Yönetici';
-                break;
-            case 'technician':
-                roleText = 'Teknisyen';
-                break;
-            case 'staff':
-                roleText = 'Personel';
-                break;
-            default:
-                roleText = 'Bilinmeyen';
-        }
-        element.textContent = roleText;
+        element.style.display = 'none';
     });
+    
+    // Avatar'a kullanıcının baş harfini ekle (ilk isim + son isim)
+    const userAvatars = document.querySelectorAll('.user-avatar');
+    userAvatars.forEach(avatar => {
+        const nameParts = userName.trim().split(' ').filter(part => part.length > 0);
+        let initials = '';
+        
+        if (nameParts.length === 1) {
+            // Tek kelime varsa sadece o kelimenin ilk harfi
+            initials = nameParts[0].charAt(0).toUpperCase();
+        } else if (nameParts.length >= 2) {
+            // İlk ismin ilk harfi + son ismin ilk harfi
+            initials = nameParts[0].charAt(0).toUpperCase() + nameParts[nameParts.length - 1].charAt(0).toUpperCase();
+        }
+        
+        // Eğer sadece ikon varsa, metni değiştir
+        const icon = avatar.querySelector('i');
+        if (icon && initials.length > 0) {
+            icon.style.display = 'none';
+            avatar.innerHTML = `<span style="font-weight: 600; font-size: 0.9rem;">${initials}</span>`;
+        }
+    });
+}
+
+// Rol gösterim metni
+function getRoleDisplayText(role) {
+    const roleMap = {
+        'admin': 'Sistem Yöneticisi',
+        'manager': 'Müdür',
+        'technician': 'Teknisyen', 
+        'staff': 'Personel'
+    };
+    return roleMap[role] || 'Bilinmeyen Rol';
 }
 
 // Admin UI'yi güncelle
 function updateAdminUI() {
+    // SessionStorage'dan kullanıcı rolünü al (auth.js ile uyumlu)
     const userRole = sessionStorage.getItem('userRole') || 'staff';
     console.log('[Admin UI] Kullanıcı rolü:', userRole);
     
@@ -85,8 +104,8 @@ function updateAdminUI() {
         btn.style.display = 'none';
     });
     
-    // Admin ise butonları göster
-    if (userRole === 'admin') {
+    // Admin veya manager ise butonları göster
+    if (userRole === 'admin' || userRole === 'manager') {
         adminButtons.forEach(btn => {
             // Buton tipine göre display değeri ayarla
             if (btn.tagName === 'BUTTON' || btn.classList.contains('btn')) {
@@ -95,7 +114,7 @@ function updateAdminUI() {
                 btn.style.display = 'block';
             }
         });
-        console.log('[Admin UI] Admin butonları gösterildi');
+        console.log('[Admin UI] Admin/Manager butonları gösterildi');
     }
 }
 
@@ -2451,4 +2470,166 @@ async function deletePersonnel(personnelId, personnelName) {
 // Sistem raporları fonksiyonu (geliştirilecek)
 function showSystemReports() {
     alert('Sistem raporları özelliği yakında eklenecektir.');
+}
+
+// Modal içinde hata göster
+function showProfileError(message) {
+    console.log('showProfileError çağrıldı:', message);
+    const errorAlert = document.getElementById('profileErrorAlert');
+    console.log('profileErrorAlert elementi:', errorAlert);
+    if (errorAlert) {
+        errorAlert.textContent = message;
+        errorAlert.classList.remove('d-none');
+        console.log('Hata gösterildi:', message);
+    } else {
+        console.error('profileErrorAlert elementi bulunamadı!');
+    }
+}
+
+// Modal içinde hata gizle
+function hideProfileError() {
+    const errorAlert = document.getElementById('profileErrorAlert');
+    if (errorAlert) {
+        errorAlert.classList.add('d-none');
+    }
+}
+
+// Kullanıcı profil modal'ını göster
+function showUserProfileModal() {
+    const userName = sessionStorage.getItem('userName') || 'Kullanıcı';
+    const userUsername = sessionStorage.getItem('userUsername') || '';
+    const userRole = sessionStorage.getItem('userRole') || 'staff';
+    
+    // Modal içindeki bilgileri doldur
+    document.getElementById('profileUserName').textContent = userName;
+    document.getElementById('profileUserRole').textContent = getRoleDisplayText(userRole);
+    document.getElementById('profileName').value = userName;
+    document.getElementById('profileUsername').value = userUsername;
+    
+    // Avatar'ı güncelle
+    const profileAvatar = document.querySelector('.user-profile-avatar i');
+    if (profileAvatar) {
+        const nameParts = userName.trim().split(' ').filter(part => part.length > 0);
+        let initials = '';
+        
+        if (nameParts.length === 1) {
+            initials = nameParts[0].charAt(0).toUpperCase();
+        } else if (nameParts.length >= 2) {
+            initials = nameParts[0].charAt(0).toUpperCase() + nameParts[nameParts.length - 1].charAt(0).toUpperCase();
+        }
+        
+        if (initials) {
+            profileAvatar.style.display = 'none';
+            profileAvatar.parentElement.innerHTML = `<span style="font-size: 4rem; font-weight: bold; color: #007bff;">${initials}</span>`;
+        }
+    }
+    
+    // Form'u temizle
+    document.getElementById('currentPassword').value = '';
+    document.getElementById('newPassword').value = '';
+    document.getElementById('confirmPassword').value = '';
+    
+    // Hataları gizle
+    hideProfileError();
+    
+    // Input alanlarında değişiklik olduğunda hataları gizle
+    const passwordInputs = ['currentPassword', 'newPassword', 'confirmPassword'];
+    passwordInputs.forEach(inputId => {
+        const input = document.getElementById(inputId);
+        if (input) {
+            input.addEventListener('input', hideProfileError);
+        }
+    });
+    
+    // Modal'ı göster
+    const modal = new bootstrap.Modal(document.getElementById('userProfileModal'));
+    modal.show();
+}
+
+// Kullanıcı şifresini güncelle
+async function updateUserPassword() {
+    // Önce hataları gizle
+    hideProfileError();
+    
+    const currentPassword = document.getElementById('currentPassword').value.trim();
+    const newPassword = document.getElementById('newPassword').value.trim();
+    const confirmPassword = document.getElementById('confirmPassword').value.trim();
+    
+    // Validasyonlar
+    if (!currentPassword || !newPassword || !confirmPassword) {
+        showProfileError('Lütfen tüm alanları doldurun.');
+        return;
+    }
+    
+    if (newPassword.length < 6) {
+        showProfileError('Yeni şifre en az 6 karakter olmalıdır.');
+        return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+        showProfileError('Yeni şifre tekrarı eşleşmiyor.');
+        return;
+    }
+    
+    // Buton durumunu değiştir
+    const updateButton = document.querySelector('#userProfileModal .btn-primary');
+    const originalText = updateButton.innerHTML;
+    updateButton.innerHTML = '<i class="bi bi-hourglass-split"></i> Güncelleniyor...';
+    updateButton.disabled = true;
+    
+    try {
+        const userId = sessionStorage.getItem('userId');
+        const userUsername = sessionStorage.getItem('userUsername');
+        
+        if (!userId || !userUsername) {
+            throw new Error('Kullanıcı bilgileri bulunamadı.');
+        }
+        
+        // Önce mevcut şifreyi doğrula
+        const personnelDoc = await window.db.collection('personnel').doc(userId).get();
+        
+        if (!personnelDoc.exists) {
+            throw new Error('Kullanıcı kaydı bulunamadı.');
+        }
+        
+        const userData = personnelDoc.data();
+        
+        if (userData.password !== currentPassword) {
+            throw new Error('Mevcut şifre hatalı. Lütfen doğru şifreyi girin.');
+        }
+        
+        // Şifreyi güncelle
+        await window.db.collection('personnel').doc(userId).update({
+            password: newPassword,
+            updatedAt: new Date().toISOString(),
+            lastPasswordChange: new Date().toISOString()
+        });
+        
+        // Başarı mesajı
+        const modal = bootstrap.Modal.getInstance(document.getElementById('userProfileModal'));
+        modal.hide();
+        
+        // Kullanıcıyı bilgilendir
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-success alert-dismissible fade show position-fixed';
+        alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 400px;';
+        alertDiv.innerHTML = `
+            <strong>Başarılı!</strong> Şifreniz güncellendi. 3 saniye sonra tekrar giriş yapmanız için yönlendirileceksiniz.
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.body.appendChild(alertDiv);
+        
+        // 3 saniye sonra logout
+        setTimeout(() => {
+            logout();
+        }, 3000);
+        
+    } catch (error) {
+        console.error('Şifre güncelleme hatası:', error);
+        showProfileError(error.message || 'Şifre güncellenirken bir hata oluştu.');
+    } finally {
+        // Buton durumunu geri al
+        updateButton.innerHTML = originalText;
+        updateButton.disabled = false;
+    }
 }
