@@ -20,16 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // Auth state değişikliklerini dinle - sadece login sayfasında
-    window.auth.onAuthStateChanged((user) => {
-        loginDebug('Auth state değişti:', user ? user.email : 'oturum kapalı');
-        
-        // Sadece kullanıcı giriş yapmışsa ve login sayfasındaysa yönlendir
-        if (user && sessionStorage.getItem('userRole') && window.location.pathname.includes('login.html')) {
-            loginDebug('Kullanıcı zaten giriş yapmış, yönlendiriliyor');
-            window.location.href = 'index.html';
-        }
-    });
+    // Firebase Auth listener kaldırıldı - manual authentication kullanıyoruz
     
     // Form elemanlarını al
     const loginForm = document.getElementById('loginForm');
@@ -40,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loginForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         
-        const email = document.getElementById('email').value;
+        const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
 
         // Giriş butonunu devre dışı bırak ve yükleniyor göster
@@ -49,78 +40,47 @@ document.addEventListener('DOMContentLoaded', () => {
         hideError();
 
         try {
-            loginDebug('Giriş denemesi başlatıldı:', { email });
+            loginDebug('Giriş denemesi başlatıldı:', { username });
 
-            // Firebase ile giriş yap
-            const userCredential = await window.auth.signInWithEmailAndPassword(email, password);
-            loginDebug('Giriş başarılı:', userCredential);
+            // Personel koleksiyonundan kullanıcıyı bul
+            const personnelQuery = await window.db.collection('personnel')
+                .where('username', '==', username)
+                .where('isActive', '==', true)
+                .get();
 
-            // Kullanıcı bilgilerini sessionStorage'a kaydet
-            const user = userCredential.user;
-            sessionStorage.setItem('userId', user.uid);
-            sessionStorage.setItem('userEmail', user.email);
-
-            try {
-                // Kullanıcı rolünü Firestore'dan al
-                const userDoc = await window.db.collection('users').doc(user.uid).get();
-                
-                if (userDoc.exists) {
-                    const userData = userDoc.data();
-                    sessionStorage.setItem('userRole', userData.role || 'staff');
-                    sessionStorage.setItem('userName', userData.name || user.email.split('@')[0]);
-                    loginDebug('Kullanıcı bilgileri kaydedildi:', userData);
-                } else {
-                    // Kullanıcı dokümanı yoksa varsayılan değerler ata
-                    loginDebug('Kullanıcı dokümanı bulunamadı, varsayılan değerler atanıyor');
-                    sessionStorage.setItem('userRole', 'staff');
-                    sessionStorage.setItem('userName', user.email.split('@')[0]);
-                    
-                    // Kullanıcı dokümanını oluştur
-                    await window.db.collection('users').doc(user.uid).set({
-                        email: user.email,
-                        name: user.email.split('@')[0],
-                        role: 'staff',
-                        createdAt: new Date().toISOString()
-                    });
-                }
-
-                // Ana sayfaya yönlendir
-                window.location.href = 'index.html';
-            } catch (firestoreError) {
-                loginDebug('Firestore hatası:', firestoreError);
-                // Firestore hatası olsa bile kullanıcıyı varsayılan rolle giriş yaptır
-                sessionStorage.setItem('userRole', 'staff');
-                sessionStorage.setItem('userName', user.email.split('@')[0]);
-                window.location.href = 'index.html';
+            if (personnelQuery.empty) {
+                throw new Error('Bu kullanıcı adı ile kayıtlı aktif bir personel bulunamadı.');
             }
+
+            // Personel bilgilerini al
+            const personnelDoc = personnelQuery.docs[0];
+            const personnelData = personnelDoc.data();
+
+            // Şifre kontrolü (gerçek uygulamada hash karşılaştırması yapılmalı)
+            if (personnelData.password !== password) {
+                throw new Error('Hatalı şifre.');
+            }
+
+            loginDebug('Personel doğrulandı:', personnelData);
+
+            // Giriş bilgilerini session'a kaydet
+            sessionStorage.setItem('isAuthenticated', 'true');
+            sessionStorage.setItem('userId', personnelDoc.id);
+            sessionStorage.setItem('userUsername', personnelData.username);
+            sessionStorage.setItem('userName', personnelData.name);
+            sessionStorage.setItem('userRole', personnelData.role);
+            sessionStorage.setItem('userDepartment', personnelData.department || '');
+
+            loginDebug('Giriş başarılı, session bilgileri kaydedildi');
+
+            // Ana sayfaya yönlendir
+            window.location.href = 'index.html';
 
         } catch (error) {
             loginDebug('Giriş hatası:', error);
             
-            // Hata mesajlarını Türkçeleştir
-            let errorMessage = 'Giriş yapılırken bir hata oluştu.';
-            
-            switch(error.code) {
-                case 'auth/invalid-email':
-                    errorMessage = 'Geçersiz e-posta adresi.';
-                    break;
-                case 'auth/user-disabled':
-                    errorMessage = 'Bu hesap devre dışı bırakılmış.';
-                    break;
-                case 'auth/user-not-found':
-                    errorMessage = 'Bu e-posta adresi ile kayıtlı bir hesap bulunamadı.';
-                    break;
-                case 'auth/wrong-password':
-                    errorMessage = 'Hatalı şifre.';
-                    break;
-                case 'auth/too-many-requests':
-                    errorMessage = 'Çok fazla başarısız giriş denemesi. Lütfen daha sonra tekrar deneyin.';
-                    break;
-                default:
-                    errorMessage = error.message;
-            }
-            
-            showError(errorMessage);
+            // Hata mesajını göster
+            showError(error.message || 'Giriş yapılırken bir hata oluştu.');
         } finally {
             // Giriş butonunu tekrar aktif et ve yükleniyor gizle
             loginButton.disabled = false;

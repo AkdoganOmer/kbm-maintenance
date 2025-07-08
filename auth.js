@@ -43,6 +43,8 @@ async function logout() {
         
     } catch (error) {
         console.error('Çıkış yaparken hata:', error);
+        // Hata olsa bile login sayfasına yönlendir
+        window.location.href = 'login.html';
     }
 }
 
@@ -192,7 +194,7 @@ function checkAuth() {
         return false;
     }
     
-    const isAuthenticated = sessionStorage.getItem('isAuthenticated');
+    const isAuthenticated = sessionStorage.getItem('isAuthenticated') === 'true';
     const currentPath = window.location.pathname.split('/').pop() || 'index.html';
     
     debugLog('Kimlik doğrulama kontrolü:', {

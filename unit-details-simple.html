@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ünite Detayları - KBMSERGİ Bakım Takip Sistemi</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="styles.css" rel="stylesheet">
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <i class="bi bi-building-gear"></i>
+                KBMSERGİ
+            </a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">
+                            <i class="bi bi-house"></i>
+                            Ana Sayfa
+                        </a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center">
+                    <div id="userInfo" class="text-light"></div>
+                    <button class="btn btn-outline-light ms-3" onclick="logout()">
+                        <i class="bi bi-box-arrow-right"></i>
+                        Çıkış
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Authentication Check Alert -->
+        <div id="authAlert" class="alert alert-warning" style="display: none;">
+            <h4>Oturum Kontrolü</h4>
+            <p>Authentication durumunuz kontrol ediliyor...</p>
+        </div>
+        
+        <!-- Header Section -->
+        <div class="unit-header mb-4">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <button class="btn btn-outline-primary mb-3" onclick="goBack()">
+                        <i class="bi bi-arrow-left"></i> Geri
+                    </button>
+                    <h1 id="unitTitle" class="unit-title">Ünite Detayları</h1>
+                    <div class="unit-subtitle">
+                        <span id="galleryName" class="text-muted">
+                            <i class="bi bi-collection me-1"></i>
+                            Galeri yükleniyor...
+                        </span>
+                    </div>
+                </div>
+                <div class="col-md-4 text-end">
+                    <div class="admin-only" style="display: none;">
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-primary" onclick="toggleEditMode()">
+                                <i class="bi bi-pencil"></i> Düzenle
+                            </button>
+                            <button class="btn btn-success" onclick="alert('Bu özellik test modunda çalışmıyor')">
+                                <i class="bi bi-plus-circle"></i> Bakım Ekle
+                            </button>
+                            <button class="btn btn-danger" onclick="alert('Bu özellik test modunda çalışmıyor')">
+                                <i class="bi bi-trash3"></i> Ünite Sil
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="row">
+            <div class="col-lg-8 mb-4">
+                <div class="card unit-images-card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-images me-2"></i>
+                            Ünite Görselleri
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <p class="mb-0">Firebase bağlantısı olmadığı için gerçek veriler yüklenemiyor. Bu sayfa sadece authentication testine odaklıdır.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 mb-4">
+                <div class="card unit-info-card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-info-circle me-2"></i>
+                            Authentication Durumu
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="authStatus"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Debug fonksiyonu
+        function debugLog(message, data = null) {
+            const timestamp = new Date().toISOString();
+            console.log(`[${timestamp}] UNIT-DETAILS-SIMPLE: ${message}`);
+            if (data) {
+                console.log('Data:', data);
+            }
+        }
+
+        // Sayfa yüklendiğinde çalışacak
+        document.addEventListener('DOMContentLoaded', async () => {
+            debugLog('Basit ünite detay sayfası yükleniyor...');
+            
+            try {
+                // URL parametrelerini kontrol et
+                const urlParams = new URLSearchParams(window.location.search);
+                const galleryId = urlParams.get('galleryId');
+                const unitId = urlParams.get('unitId');
+
+                debugLog('URL parametreleri:', { galleryId, unitId });
+
+                // Authentication kontrolü göster
+                const authAlert = document.getElementById('authAlert');
+                authAlert.style.display = 'block';
+
+                // Auth durumunu kontrol et
+                const isAuthenticated = sessionStorage.getItem('isAuthenticated') === 'true';
+                if (!isAuthenticated) {
+                    debugLog('Kullanıcı oturum açmamış - login sayfasına yönlendiriliyor');
+                    alert('Oturum açmanız gerekiyor. Login sayfasına yönlendiriliyorsunuz.');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                // Kullanıcı bilgilerini al ve göster
+                const userData = JSON.parse(sessionStorage.getItem('userData') || '{}');
+                debugLog('Kullanıcı oturum açmış:', userData.email);
+
+                // Auth alert'i gizle
+                authAlert.style.display = 'none';
+
+                // Kullanıcı bilgilerini göster
+                updateUserInfo(userData);
+                
+                // Admin UI'ı güncelle
+                updateAdminUI(userData);
+
+                // Auth status göster
+                const authStatus = document.getElementById('authStatus');
+                authStatus.innerHTML = `
+                    <div class="alert alert-success">
+                        <strong>✅ Oturum açık</strong><br>
+                        <small>Email: ${userData.email}</small><br>
+                        <small>İsim: ${userData.name}</small><br>
+                        <small>Rol: ${userData.role}</small>
+                    </div>
+                    <div class="alert alert-info">
+                        <strong>URL Parametreleri:</strong><br>
+                        <small>Gallery ID: ${galleryId}</small><br>
+                        <small>Unit ID: ${unitId}</small>
+                    </div>
+                `;
+
+                // Sayfa başlığını güncelle
+                if (galleryId && unitId) {
+                    document.getElementById('unitTitle').textContent = `Ünite ${unitId}`;
+                    document.getElementById('galleryName').innerHTML = `
+                        <i class="bi bi-collection me-1"></i>
+                        Galeri ${galleryId}
+                    `;
+                }
+
+                debugLog('Basit ünite detay sayfası başarıyla yüklendi');
+            } catch (error) {
+                console.error('Sayfa başlatılırken hata:', error);
+                debugLog('Sayfa başlatılırken hata:', error);
+                alert(error.message || 'Sayfa yüklenirken bir hata oluştu.');
+            }
+        });
+
+        // Kullanıcı bilgilerini güncelle
+        function updateUserInfo(userData) {
+            const userInfoElement = document.getElementById('userInfo');
+            if (userInfoElement && userData) {
+                const roleText = getRoleText(userData.role);
+                userInfoElement.innerHTML = `
+                    <span class="me-2">
+                        <i class="bi bi-person-circle me-1"></i>
+                        ${userData.name || 'Kullanıcı'}
+                    </span>
+                    <small class="text-light opacity-75">(${roleText})</small>
+                `;
+            }
+        }
+
+        // Admin UI'ı güncelle  
+        function updateAdminUI(userData) {
+            const adminElements = document.querySelectorAll('.admin-only');
+            const isAdmin = userData && (userData.role === 'admin' || userData.role === 'manager');
+            
+            adminElements.forEach(element => {
+                element.style.display = isAdmin ? '' : 'none';
+            });
+        }
+
+        // Rol metni al
+        function getRoleText(role) {
+            const roleMap = {
+                'admin': 'Yönetici',
+                'manager': 'Müdür', 
+                'technician': 'Teknisyen',
+                'staff': 'Personel'
+            };
+            return roleMap[role] || 'Kullanıcı';
+        }
+
+        // Geri gitme fonksiyonu
+        function goBack() {
+            window.history.back();
+        }
+
+        // Çıkış fonksiyonu
+        function logout() {
+            sessionStorage.removeItem('isAuthenticated');
+            sessionStorage.removeItem('userData');
+            window.location.href = 'login.html';
+        }
+
+        // Placeholder fonksiyonlar
+        function toggleEditMode() {
+            alert('Bu özellik test modunda çalışmıyor - Firebase bağlantısı gerekli');
+        }
+    </script>
+</body>
+</html> 

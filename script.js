@@ -14,6 +14,91 @@ function debug(message, data = null) {
     }
 }
 
+// Authentication kontrolü
+function checkAuthentication() {
+    const isAuthenticated = sessionStorage.getItem('isAuthenticated') === 'true';
+    const currentPath = window.location.pathname.split('/').pop() || 'index.html';
+    
+    console.log('Auth kontrolü:', { isAuthenticated, currentPath });
+    
+    // Login sayfasında değilse ve giriş yapmamışsa login sayfasına yönlendir
+    if (!isAuthenticated && currentPath !== 'login.html') {
+        console.log('Kullanıcı giriş yapmamış, login sayfasına yönlendiriliyor');
+        window.location.href = 'login.html';
+        return false;
+    }
+    
+    // Kullanıcı bilgilerini güncelle
+    if (isAuthenticated) {
+        updateUserInfo();
+        updateAdminUI();
+    }
+    
+    return true;
+}
+
+// Kullanıcı bilgilerini güncelle
+function updateUserInfo() {
+    const userName = sessionStorage.getItem('userName') || 'Kullanıcı';
+    const userRole = sessionStorage.getItem('userRole') || 'staff';
+    
+    // Kullanıcı adı gösterimi
+    const userNameElements = document.querySelectorAll('.user-name');
+    userNameElements.forEach(element => {
+        element.textContent = userName;
+    });
+    
+    // Kullanıcı rolü gösterimi
+    const userRoleElements = document.querySelectorAll('.user-role');
+    userRoleElements.forEach(element => {
+        let roleText = '';
+        switch(userRole) {
+            case 'admin':
+                roleText = 'Sistem Yöneticisi';
+                break;
+            case 'manager':
+                roleText = 'Yönetici';
+                break;
+            case 'technician':
+                roleText = 'Teknisyen';
+                break;
+            case 'staff':
+                roleText = 'Personel';
+                break;
+            default:
+                roleText = 'Bilinmeyen';
+        }
+        element.textContent = roleText;
+    });
+}
+
+// Admin UI'yi güncelle
+function updateAdminUI() {
+    const userRole = sessionStorage.getItem('userRole') || 'staff';
+    console.log('[Admin UI] Kullanıcı rolü:', userRole);
+    
+    // Admin butonları
+    const adminButtons = document.querySelectorAll('.admin-only');
+    
+    // Tüm admin butonları gizle
+    adminButtons.forEach(btn => {
+        btn.style.display = 'none';
+    });
+    
+    // Admin ise butonları göster
+    if (userRole === 'admin') {
+        adminButtons.forEach(btn => {
+            // Buton tipine göre display değeri ayarla
+            if (btn.tagName === 'BUTTON' || btn.classList.contains('btn')) {
+                btn.style.display = 'inline-block';
+            } else {
+                btn.style.display = 'block';
+            }
+        });
+        console.log('[Admin UI] Admin butonları gösterildi');
+    }
+}
+
 // Debug fonksiyonu
 function dashboardDebug(message, data = null) {
     if (window.debug) {
@@ -217,23 +302,9 @@ async function loadDashboard() {
             return;
         }
         
-        // Kullanıcı bilgilerini kontrol et
-        const userRole = sessionStorage.getItem('userRole');
-        const userName = sessionStorage.getItem('userName');
-        
-        if (!userRole || !userName) {
-            dashboardDebug('Kullanıcı bilgileri eksik, login sayfasına yönlendiriliyor');
-            window.location.href = 'login.html';
-            return;
-        }
-
-        // Kullanıcı bilgilerini göster
-        const userInfoElement = document.getElementById('userInfo');
-        if (userInfoElement) {
-            userInfoElement.innerHTML = `
-                <span class="me-2"><i class="bi bi-person-circle"></i> ${userName}</span>
-            `;
-        }
+        // Kullanıcı bilgilerini güncelle
+        updateUserInfo();
+        updateAdminUI();
 
         // İstatistikleri yükle
         await loadDashboardStats();
@@ -253,64 +324,32 @@ document.addEventListener('DOMContentLoaded', async function() {
     try {
         dashboardDebug('Sayfa yükleniyor...');
 
+        // Authentication kontrolü
+        if (!checkAuthentication()) {
+            return; // Authentication kontrolü başarısızsa işlemi durdur
+        }
+
         // Firebase başlatma kontrolü
         if (!window.checkFirebaseStatus()) {
             throw new Error('Firebase başlatılamadı');
         }
 
-        // Auth state değişikliklerini dinle
-        window.auth.onAuthStateChanged(async (user) => {
-            dashboardDebug('Auth state değişti:', user ? user.email : 'oturum kapalı');
-
-            if (!user) {
-                dashboardDebug('Kullanıcı oturum açmamış, login sayfasına yönlendiriliyor');
-                window.location.href = 'login.html';
-                return;
-            }
-
-            // Kullanıcı bilgilerini kontrol et
-            const userRole = sessionStorage.getItem('userRole');
-            const userName = sessionStorage.getItem('userName');
-
-            if (!userRole || !userName) {
-                try {
-                    // Kullanıcı bilgilerini Firestore'dan al
-                    const userDoc = await window.db.collection('users').doc(user.uid).get();
-                    
-                    if (userDoc.exists) {
-                        const userData = userDoc.data();
-                        sessionStorage.setItem('userRole', userData.role || 'staff');
-                        sessionStorage.setItem('userName', userData.name || user.email.split('@')[0]);
-                        dashboardDebug('Kullanıcı bilgileri Firestore\'dan alındı:', userData);
-                    } else {
-                        // Kullanıcı dokümanı yoksa varsayılan değerler ata
-                        sessionStorage.setItem('userRole', 'staff');
-                        sessionStorage.setItem('userName', user.email.split('@')[0]);
-                        dashboardDebug('Varsayılan kullanıcı bilgileri atandı');
-                    }
-                } catch (error) {
-                    console.error('Kullanıcı bilgileri alınırken hata:', error);
-                    dashboardDebug('Kullanıcı bilgileri alınırken hata:', error);
-                }
-            }
-
-            // Dashboard'ı yükle
-            await loadDashboard();
+        // Dashboard'ı yükle
+        await loadDashboard();
+        
+        // URL parametresi kontrolü - galeri modalı açılacak mı?
+        const urlParams = new URLSearchParams(window.location.search);
+        const openGalleryId = urlParams.get('openGallery');
+        
+        if (openGalleryId) {
+            // URL'den parametreyi temizle
+            window.history.replaceState({}, document.title, window.location.pathname);
             
-            // URL parametresi kontrolü - galeri modalı açılacak mı?
-            const urlParams = new URLSearchParams(window.location.search);
-            const openGalleryId = urlParams.get('openGallery');
-            
-            if (openGalleryId) {
-                // URL'den parametreyi temizle
-                window.history.replaceState({}, document.title, window.location.pathname);
-                
-                // Galeri üniteler modalını aç
-                setTimeout(() => {
-                    showGalleryUnits(openGalleryId);
-                }, 1000); // Dashboard yüklendikten sonra modal açılsın
-            }
-        });
+            // Galeri üniteler modalını aç
+            setTimeout(() => {
+                showGalleryUnits(openGalleryId);
+            }, 1000); // Dashboard yüklendikten sonra modal açılsın
+        }
 
     } catch (error) {
         console.error('Sayfa yüklenirken hata:', error);
@@ -1813,12 +1852,15 @@ function filterUnits(status) {
 // Çıkış yap
 async function logout() {
     try {
-        await firebase.auth().signOut();
+        // Session storage'ı temizle
         sessionStorage.clear();
+        
+        // Login sayfasına yönlendir
         window.location.href = 'login.html';
     } catch (error) {
         console.error('Çıkış yapılırken hata:', error);
-        showError('Çıkış yapılırken bir hata oluştu.');
+        // Hata olsa bile login sayfasına yönlendir
+        window.location.href = 'login.html';
     }
 }
 
@@ -2046,4 +2088,367 @@ function goBackToGalleries() {
         const galleriesModal = new bootstrap.Modal(document.getElementById('galleriesModal'));
         galleriesModal.show();
     }, 300); // Modal kapanma animasyonu için kısa bekleme
+}
+
+// ============== PERSONEL YÖNETİMİ FONKSİYONLARI ==============
+
+// Personel yönetimi modalını göster
+async function showPersonnelManagementModal() {
+    const modal = new bootstrap.Modal(document.getElementById('personnelManagementModal'));
+    modal.show();
+    
+    // Personel listesini yükle
+    await loadPersonnelList();
+}
+
+// Personel listesini yükle
+async function loadPersonnelList() {
+    try {
+        const tbody = document.getElementById('personnelTableBody');
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center"><div class="spinner-border text-primary" role="status"></div></td></tr>';
+        
+        // Firestore'dan personel verilerini çek
+        const snapshot = await window.db.collection('personnel').orderBy('createdAt', 'desc').get();
+        
+        let html = '';
+        if (snapshot.empty) {
+            html = '<tr><td colspan="5" class="text-center text-muted">Henüz personel kaydı bulunmuyor.</td></tr>';
+        } else {
+            snapshot.forEach(doc => {
+                const personnel = doc.data();
+                const personnelId = doc.id;
+                
+                // Rol çevirisi
+                const roleText = getRoleText(personnel.role);
+                const roleColor = getRoleColor(personnel.role);
+                
+                // Tarih formatı
+                const createdDate = personnel.createdAt ? 
+                    new Date(personnel.createdAt).toLocaleDateString('tr-TR') : 
+                    'Bilinmiyor';
+                
+                html += `
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-circle me-2">
+                                    <i class="bi bi-person-fill"></i>
+                                </div>
+                                <div>
+                                    <strong>${personnel.name || 'İsimsiz'}</strong>
+                                    <br><small class="text-muted">@${personnel.username || 'kullanici'}</small>
+                                    ${personnel.department ? `<br><small class="text-muted">${personnel.department}</small>` : ''}
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            ${personnel.department ? `<span class="text-muted">${personnel.department}</span>` : '<span class="text-muted">Departman belirtilmemiş</span>'}
+                        </td>
+                        <td>
+                            <span class="badge ${roleColor}">${roleText}</span>
+                        </td>
+                        <td>${createdDate}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-warning" onclick="showEditPersonnelModal('${personnelId}')" title="Düzenle">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-outline-danger" onclick="deletePersonnel('${personnelId}', '${personnel.name}')" title="Sil">
+                                    <i class="bi bi-trash3"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+        
+        tbody.innerHTML = html;
+        
+    } catch (error) {
+        console.error('Personel listesi yüklenirken hata:', error);
+        document.getElementById('personnelTableBody').innerHTML = 
+            '<tr><td colspan="5" class="text-center text-danger">Personel listesi yüklenirken hata oluştu.</td></tr>';
+    }
+}
+
+// Personel rol metni
+function getRoleText(role) {
+    switch(role) {
+        case 'admin': return 'Sistem Yöneticisi';
+        case 'manager': return 'Yönetici';
+        case 'technician': return 'Teknisyen';
+        case 'staff': return 'Personel';
+        default: return 'Bilinmeyen';
+    }
+}
+
+// Personel rol rengi
+function getRoleColor(role) {
+    switch(role) {
+        case 'admin': return 'bg-danger';
+        case 'manager': return 'bg-warning text-dark';
+        case 'technician': return 'bg-info';
+        case 'staff': return 'bg-secondary';
+        default: return 'bg-light text-dark';
+    }
+}
+
+// Yeni personel ekleme modalını göster
+function showAddPersonnelModal() {
+    const modal = new bootstrap.Modal(document.getElementById('addPersonnelModal'));
+    modal.show();
+    
+    // Formu temizle
+    document.getElementById('addPersonnelForm').reset();
+}
+
+// Yeni personel kaydet
+async function saveNewPersonnel() {
+    try {
+        // Form verilerini al
+        console.log('Personel form elementleri kontrol ediliyor...');
+        
+        const nameElement = document.getElementById('personnelName');
+        const usernameElement = document.getElementById('personnelUsername');
+        const passwordElement = document.getElementById('personnelPassword');
+        const roleElement = document.getElementById('personnelRole');
+        const departmentElement = document.getElementById('personnelDepartment');
+        
+        if (!nameElement) {
+            alert('Hata: personnelName elementi bulunamadı!');
+            return;
+        }
+        if (!usernameElement) {
+            alert('Hata: personnelUsername elementi bulunamadı!');
+            return;
+        }
+        if (!passwordElement) {
+            alert('Hata: personnelPassword elementi bulunamadı!');
+            return;
+        }
+        if (!roleElement) {
+            alert('Hata: personnelRole elementi bulunamadı!');
+            return;
+        }
+        if (!departmentElement) {
+            alert('Hata: personnelDepartment elementi bulunamadı!');
+            return;
+        }
+        
+        const name = nameElement.value.trim();
+        const username = usernameElement.value.trim();
+        const password = passwordElement.value;
+        const role = roleElement.value;
+        const department = departmentElement.value.trim();
+        
+        console.log('Form verileri:', { name, username, password: '***', role, department });
+        
+        // Validasyon
+        if (!name || !username || !password || !role) {
+            alert('Lütfen tüm zorunlu alanları doldurun!');
+            return;
+        }
+        
+        // Şifre uzunluğu kontrolü
+        if (password.length < 6) {
+            alert('Şifre en az 6 karakter olmalıdır!');
+            return;
+        }
+        
+        // Buton durumunu değiştir
+        const saveButton = document.querySelector('#addPersonnelModal .btn-success');
+        const originalText = saveButton.innerHTML;
+        saveButton.innerHTML = '<i class="bi bi-hourglass-split"></i> Kaydediliyor...';
+        saveButton.disabled = true;
+        
+        // Kullanıcı adı kontrolü (aynı kullanıcı adı var mı?)
+        const existingUsername = await window.db.collection('personnel').where('username', '==', username).get();
+        if (!existingUsername.empty) {
+            alert('Bu kullanıcı adı zaten kullanılıyor!');
+            return;
+        }
+        
+        // Yeni personel objesi oluştur
+        const newPersonnel = {
+            name: name,
+            username: username,
+            password: password, // Gerçek uygulamada hash'lenmeli
+            role: role,
+            department: department || '',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            isActive: true
+        };
+        
+        // Firebase'e ekle
+        await window.db.collection('personnel').add(newPersonnel);
+        
+        // Başarı mesajı
+        alert('Personel başarıyla eklendi!');
+        
+        // Modal'ı kapat
+        const modal = bootstrap.Modal.getInstance(document.getElementById('addPersonnelModal'));
+        modal.hide();
+        
+        // Personel listesini yenile
+        await loadPersonnelList();
+        
+    } catch (error) {
+        console.error('Personel eklenirken hata:', error);
+        alert('Personel eklenirken bir hata oluştu: ' + error.message);
+    } finally {
+        // Buton durumunu geri al
+        const saveButton = document.querySelector('#addPersonnelModal .btn-success');
+        if (saveButton) {
+            saveButton.innerHTML = '<i class="bi bi-check-circle"></i> Personel Ekle';
+            saveButton.disabled = false;
+        }
+    }
+}
+
+// Personel düzenleme modalını göster
+async function showEditPersonnelModal(personnelId) {
+    try {
+        // Personel verilerini çek
+        const doc = await window.db.collection('personnel').doc(personnelId).get();
+        
+        if (!doc.exists) {
+            alert('Personel bulunamadı!');
+            return;
+        }
+        
+        const personnel = doc.data();
+        
+        // Modal'ı aç
+        const modal = new bootstrap.Modal(document.getElementById('editPersonnelModal'));
+        modal.show();
+        
+        // Form alanlarını doldur
+        document.getElementById('editPersonnelId').value = personnelId;
+        document.getElementById('editPersonnelName').value = personnel.name || '';
+        document.getElementById('editPersonnelUsername').value = personnel.username || '';
+        document.getElementById('editPersonnelPassword').value = '';
+        document.getElementById('editPersonnelRole').value = personnel.role || '';
+        document.getElementById('editPersonnelDepartment').value = personnel.department || '';
+        
+    } catch (error) {
+        console.error('Personel verileri yüklenirken hata:', error);
+        alert('Personel verileri yüklenirken hata oluştu!');
+    }
+}
+
+// Personel değişikliklerini kaydet
+async function savePersonnelChanges() {
+    try {
+        // Form verilerini al
+        const personnelId = document.getElementById('editPersonnelId').value;
+        const name = document.getElementById('editPersonnelName').value.trim();
+        const username = document.getElementById('editPersonnelUsername').value.trim();
+        const password = document.getElementById('editPersonnelPassword').value;
+        const role = document.getElementById('editPersonnelRole').value;
+        const department = document.getElementById('editPersonnelDepartment').value.trim();
+        
+        // Validasyon
+        if (!name || !username || !role || !personnelId) {
+            alert('Lütfen tüm zorunlu alanları doldurun!');
+            return;
+        }
+        
+        // Şifre kontrolü (eğer girildiyse)
+        if (password && password.length < 6) {
+            alert('Şifre en az 6 karakter olmalıdır!');
+            return;
+        }
+        
+        // Buton durumunu değiştir
+        const saveButton = document.querySelector('#editPersonnelModal .btn-warning');
+        const originalText = saveButton.innerHTML;
+        saveButton.innerHTML = '<i class="bi bi-hourglass-split"></i> Kaydediliyor...';
+        saveButton.disabled = true;
+        
+        // Kullanıcı adı kontrolü (aynı kullanıcı adı başka birinde var mı?)
+        const existingUsernameCheck = await window.db.collection('personnel')
+            .where('username', '==', username).get();
+        
+        let usernameExists = false;
+        existingUsernameCheck.forEach(doc => {
+            if (doc.id !== personnelId) {
+                usernameExists = true;
+            }
+        });
+        
+        if (usernameExists) {
+            alert('Bu kullanıcı adı başka bir personel tarafından kullanılıyor!');
+            return;
+        }
+        
+        // Güncellenecek veri objesi
+        const updateData = {
+            name: name,
+            username: username,
+            role: role,
+            department: department,
+            updatedAt: new Date().toISOString()
+        };
+        
+        // Şifre güncellenmişse ekle
+        if (password) {
+            updateData.password = password;
+        }
+        
+        // Firebase'de güncelle
+        await window.db.collection('personnel').doc(personnelId).update(updateData);
+        
+        // Başarı mesajı
+        alert('Personel bilgileri başarıyla güncellendi!');
+        
+        // Modal'ı kapat
+        const modal = bootstrap.Modal.getInstance(document.getElementById('editPersonnelModal'));
+        modal.hide();
+        
+        // Personel listesini yenile
+        await loadPersonnelList();
+        
+    } catch (error) {
+        console.error('Personel güncellenirken hata:', error);
+        alert('Personel güncellenirken bir hata oluştu: ' + error.message);
+    } finally {
+        // Buton durumunu geri al
+        const saveButton = document.querySelector('#editPersonnelModal .btn-warning');
+        if (saveButton) {
+            saveButton.innerHTML = '<i class="bi bi-check-circle"></i> Değişiklikleri Kaydet';
+            saveButton.disabled = false;
+        }
+    }
+}
+
+// Personel silme fonksiyonu
+async function deletePersonnel(personnelId, personnelName) {
+    try {
+        // Onay al
+        const confirmDelete = confirm(`"${personnelName}" adlı personeli silmek istediğinizden emin misiniz?\n\nBu işlem geri alınamaz.`);
+        
+        if (!confirmDelete) {
+            return;
+        }
+        
+        // Firebase'den sil
+        await window.db.collection('personnel').doc(personnelId).delete();
+        
+        // Başarı mesajı
+        alert(`"${personnelName}" başarıyla silindi.`);
+        
+        // Personel listesini yenile
+        await loadPersonnelList();
+        
+    } catch (error) {
+        console.error('Personel silinirken hata:', error);
+        alert('Personel silinirken bir hata oluştu: ' + error.message);
+    }
+}
+
+// Sistem raporları fonksiyonu (geliştirilecek)
+function showSystemReports() {
+    alert('Sistem raporları özelliği yakında eklenecektir.');
 }

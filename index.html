@@ -312,7 +312,11 @@
             </button>
             <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
                 <div class="d-flex align-items-center">
-                    <div class="user-info me-3" id="userInfo"></div>
+                    <div class="user-info me-3" id="userInfo">
+                        <i class="bi bi-person-circle me-1"></i>
+                        <span class="user-name">Kullanıcı</span>
+                        <small class="d-block user-role text-light opacity-75">Personel</small>
+                    </div>
                     <button class="btn btn-outline-light" onclick="logout()">
                         <i class="bi bi-box-arrow-right"></i> Çıkış
                     </button>
@@ -412,6 +416,44 @@
                     </div>
                 </div>
 
+            </div>
+        </div>
+
+        <!-- Admin Yönetim Paneli -->
+        <div class="card admin-only mb-4" style="display: none;">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-gear-wide-connected text-primary"></i>
+                    Yönetim Paneli
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card h-100 border-primary">
+                            <div class="card-body text-center">
+                                <i class="bi bi-people-fill text-primary" style="font-size: 3rem;"></i>
+                                <h5 class="card-title mt-3">Personel Yönetimi</h5>
+                                <p class="card-text text-muted">Sistem kullanıcılarını yönet, roller ata</p>
+                                <button class="btn btn-primary" onclick="showPersonnelManagementModal()">
+                                    <i class="bi bi-person-gear"></i> Personel Yönet
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card h-100 border-info">
+                            <div class="card-body text-center">
+                                <i class="bi bi-bar-chart-fill text-info" style="font-size: 3rem;"></i>
+                                <h5 class="card-title mt-3">Sistem Raporları</h5>
+                                <p class="card-text text-muted">Detaylı sistem ve bakım raporları</p>
+                                <button class="btn btn-info text-white" onclick="showSystemReports()">
+                                    <i class="bi bi-file-earmark-bar-graph"></i> Raporları Görüntüle
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -773,6 +815,201 @@
         </div>
     </div>
 
+    <!-- Personel Yönetimi Modal -->
+    <div class="modal fade" id="personnelManagementModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-people-fill text-primary"></i>
+                        Personel Yönetimi
+                    </h5>
+                    <div class="ms-auto d-flex align-items-center gap-2">
+                        <button type="button" class="btn btn-success btn-sm" onclick="showAddPersonnelModal()">
+                            <i class="bi bi-person-plus"></i> Yeni Personel Ekle
+                        </button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Ad Soyad</th>
+                                    <th>Departman</th>
+                                    <th>Pozisyon</th>
+                                    <th>Kayıt Tarihi</th>
+                                    <th>İşlemler</th>
+                                </tr>
+                            </thead>
+                            <tbody id="personnelTableBody">
+                                <tr>
+                                    <td colspan="5" class="text-center">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Yükleniyor...</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Personel Ekle Modal -->
+    <div class="modal fade" id="addPersonnelModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-person-plus text-success"></i>
+                        Yeni Personel Ekle
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addPersonnelForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="personnelName" class="form-label">Ad Soyad *</label>
+                                    <input type="text" class="form-control" id="personnelName" required placeholder="Örn: Ahmet Yılmaz">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="personnelUsername" class="form-label">Kullanıcı Adı *</label>
+                                    <input type="text" class="form-control" id="personnelUsername" required placeholder="ahmet.yilmaz">
+                                </div>
+                            </div>
+                        </div>
+                        
+
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="personnelPassword" class="form-label">Şifre *</label>
+                                    <input type="password" class="form-control" id="personnelPassword" required placeholder="Güçlü şifre oluşturun">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="personnelRole" class="form-label">Pozisyon *</label>
+                                    <select class="form-select" id="personnelRole" required>
+                                        <option value="">Pozisyon Seçin</option>
+                                        <option value="admin">Sistem Yöneticisi</option>
+                                        <option value="manager">Yönetici</option>
+                                        <option value="technician">Teknisyen</option>
+                                        <option value="staff">Personel</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="personnelDepartment" class="form-label">Departman</label>
+                            <input type="text" class="form-control" id="personnelDepartment" placeholder="Örn: Sergi Birimi">
+                        </div>
+                        
+
+                        
+                        <div class="alert alert-info">
+                            <h6><i class="bi bi-info-circle"></i> Pozisyon Yetkileri:</h6>
+                            <ul class="mb-0">
+                                <li><strong>Sistem Yöneticisi:</strong> Tüm yetkilere sahip</li>
+                                <li><strong>Yönetici:</strong> Galeri/ünite yönetimi, raporlama</li>
+                                <li><strong>Teknisyen:</strong> Bakım işlemleri, durum güncellemeleri</li>
+                                <li><strong>Personel:</strong> Sadece görüntüleme yetkisi</li>
+                            </ul>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="button" class="btn btn-success" onclick="saveNewPersonnel()">
+                        <i class="bi bi-check-circle"></i> Personel Ekle
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Personel Düzenle Modal -->
+    <div class="modal fade" id="editPersonnelModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-person-gear text-warning"></i>
+                        Personel Düzenle
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editPersonnelForm">
+                        <input type="hidden" id="editPersonnelId">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="editPersonnelName" class="form-label">Ad Soyad *</label>
+                                    <input type="text" class="form-control" id="editPersonnelName" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="editPersonnelUsername" class="form-label">Kullanıcı Adı *</label>
+                                    <input type="text" class="form-control" id="editPersonnelUsername" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="editPersonnelPassword" class="form-label">Yeni Şifre</label>
+                                    <input type="password" class="form-control" id="editPersonnelPassword" placeholder="Boş bırakılırsa değişmez">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="editPersonnelRole" class="form-label">Pozisyon *</label>
+                                    <select class="form-select" id="editPersonnelRole" required>
+                                        <option value="admin">Sistem Yöneticisi</option>
+                                        <option value="manager">Yönetici</option>
+                                        <option value="technician">Teknisyen</option>
+                                        <option value="staff">Personel</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="editPersonnelDepartment" class="form-label">Departman</label>
+                            <input type="text" class="form-control" id="editPersonnelDepartment">
+                        </div>
+                        
+
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="button" class="btn btn-warning" onclick="savePersonnelChanges()">
+                        <i class="bi bi-check-circle"></i> Değişiklikleri Kaydet
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -807,7 +1044,6 @@
         window.auth = auth;
         window.db = db;
     </script>
-    <!-- <script src="auth.js"></script> -->
-    <script src="script.js"></script>
+    <script src="script.js?v=1.1"></script>
 </body>
 </html> 

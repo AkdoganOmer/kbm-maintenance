@@ -50,9 +50,9 @@ try {
     window.db = firebase.firestore();
     window.debug('Firestore referansı oluşturuldu');
 
-    // Auth referansı
-    window.auth = firebase.auth();
-    window.debug('Auth referansı oluşturuldu');
+    // Auth referansı - Manuel authentication için artık gerekli değil
+    // window.auth = firebase.auth();
+    // window.debug('Auth referansı oluşturuldu');
 
     // Firebase durumunu kontrol et
     window.checkFirebaseStatus = function() {
@@ -62,9 +62,10 @@ try {
                 if (window.db) {
                     window.debug('Firestore durumu: Hazır');
                 }
-                if (window.auth) {
-                    window.debug('Auth durumu: Hazır');
-                }
+                // Auth durumu - Manuel authentication kullanılıyor
+                // if (window.auth) {
+                //     window.debug('Auth durumu: Hazır');
+                // }
                 return true;
             }
             window.debug('Firebase durumu: Başlatılmadı');
@@ -98,35 +99,8 @@ document.addEventListener('DOMContentLoaded', () => {
     checkFirebaseStatus();
 });
 
-// Auth durumu değişikliğini dinle
-firebase.auth().onAuthStateChanged(async (user) => {
-    window.debug('[Auth Debug] Auth durumu dinleyicisi başlatılıyor...');
-
-    if (user) {
-        window.debug('[Auth Debug] Auth durumu değişti:', user.email);
-
-        // Mevcut sayfayı kontrol et
-        const currentPath = window.location.pathname.split('/').pop() || 'index.html';
-        const currentPage = {
-            path: currentPath,
-            isLoginPage: currentPath === 'login.html'
-        };
-        window.debug('[Auth Debug] Mevcut sayfa:', currentPage);
-
-        // Login sayfasındaysa ana sayfaya yönlendir
-        if (currentPage.isLoginPage) {
-            window.location.href = 'index.html';
-        }
-    } else {
-        window.debug('[Auth Debug] Kullanıcı oturumu kapalı');
-        
-        // Login sayfasında değilse login sayfasına yönlendir
-        const currentPath = window.location.pathname.split('/').pop();
-        if (currentPath !== 'login.html') {
-            window.location.href = 'login.html';
-        }
-    }
-});
+// Authentication sistem artık sessionStorage tabanlı
+// Firebase Auth dinleyicisi kaldırıldı - script.js'de manuel kontrol yapılıyor
 
 
 

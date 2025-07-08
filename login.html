@@ -98,8 +98,8 @@
                         <div id="loginError" class="alert alert-danger d-none"></div>
                         <form id="loginForm">
                             <div class="mb-4">
-                                <label for="email" class="form-label">Kurumsal E-posta</label>
-                                <input type="email" class="form-control" id="email" placeholder="ornek@kbm.org.tr" required>
+                                <label for="username" class="form-label">Kullanıcı Adı</label>
+                                <input type="text" class="form-control" id="username" placeholder="admin" required>
                             </div>
                             <div class="mb-4">
                                 <label for="password" class="form-label">Şifre</label>
@@ -115,15 +115,7 @@
                                 <span>Giriş yapılıyor...</span>
                             </div>
                         </form>
-                        <div class="mt-4">
-                            <p class="text-muted small">Test Hesapları:</p>
-                            <ul class="text-muted small">
-                                <li>Ahmet Yılmaz (Admin): admin@kbm.org.tr / Admin123!</li>
-                                <li>Fatma Demir (Yönetici): manager@kbm.org.tr / Manager123!</li>
-                                <li>Mehmet Kaya (Teknisyen): tech@kbm.org.tr / Tech123!</li>
-                                <li>Ayşe Özkan (Personel): staff@kbm.org.tr / Staff123!</li>
-                            </ul>
-                        </div>
+
                     </div>
                 </div>
                 <div class="footer-text">
@@ -166,6 +158,7 @@
         window.auth = auth;
         window.db = db;
     </script>
+    <script src="test-admin.js"></script>
     <script src="login.js"></script>
 </body>
 </html> 

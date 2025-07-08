@@ -23,51 +23,64 @@ document.addEventListener('DOMContentLoaded', async () => {
             throw new Error('Galeri veya ünite bilgisi eksik! Lütfen galeriler sayfasından bir ünite seçin.');
         }
 
-        // Firebase'in yüklenmesini bekle
-        await new Promise((resolve, reject) => {
-            const checkFirebase = setInterval(() => {
-                if (typeof firebase !== 'undefined' && firebase.apps.length > 0 && window.db) {
-                    clearInterval(checkFirebase);
-                    resolve();
-                }
-            }, 100);
-
-            // 10 saniye sonra timeout
-            setTimeout(() => {
-                clearInterval(checkFirebase);
-                reject(new Error('Firebase yüklenirken zaman aşımı'));
-            }, 10000);
-        });
+        // Firebase'in yüklenmesini bekle - Hızlı kontrol
+        let firebaseReady = false;
+        let attempts = 0;
+        
+        while (!firebaseReady && attempts < 50) { // 5 saniye max
+            attempts++;
+            debugLog(`Firebase kontrol denemesi ${attempts}`, {
+                firebaseExists: typeof firebase !== 'undefined',
+                appsLength: typeof firebase !== 'undefined' ? firebase.apps.length : 0,
+                dbExists: !!window.db
+            });
+            
+            if (typeof firebase !== 'undefined' && firebase.apps.length > 0 && window.db) {
+                firebaseReady = true;
+                debugLog('Firebase başarıyla yüklendi');
+                break;
+            }
+            
+            // 100ms bekle
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        
+        if (!firebaseReady) {
+            debugLog('Firebase timeout - Offline modda devam ediliyor');
+            // Firebase yüklenemese bile authentication check'e devam et
+            console.warn('Firebase yüklenemedi, offline modda çalışılıyor');
+        }
 
         debugLog('Firebase yüklendi');
 
         // Auth durumunu kontrol et
-        await new Promise((resolve) => {
-            const unsubscribe = firebase.auth().onAuthStateChanged((user) => {
-                unsubscribe();
-                if (!user) {
-                    debugLog('Kullanıcı oturum açmamış');
-                    window.location.href = 'login.html';
-                    return;
-                }
-                debugLog('Kullanıcı oturum açmış:', user.email);
-                resolve();
-            });
-        });
+        const isAuthenticated = sessionStorage.getItem('isAuthenticated') === 'true';
+        if (!isAuthenticated) {
+            debugLog('Kullanıcı oturum açmamış');
+            window.location.href = 'login.html';
+            return;
+        }
+        
+        // Kullanıcı bilgilerini al ve göster
+        const userData = JSON.parse(sessionStorage.getItem('userData') || '{}');
+        debugLog('Kullanıcı oturum açmış:', userData.email);
+
+        // Kullanıcı bilgilerini göster
+        updateUserInfo(userData);
+        
+        // Admin UI'ı güncelle
+        updateAdminUI(userData);
 
         // Event listener'ları ayarla
         setupEventListeners();
 
-        // Admin UI'ı güncelle
-        if (typeof checkAuth === 'function') {
-            checkAuth();
-        }
-        if (typeof updateAdminUI === 'function') {
-            updateAdminUI();
-        }
-
         // Sayfayı başlat
-        await loadUnitDetails();
+        if (firebaseReady) {
+            await loadUnitDetails();
+        } else {
+            // Firebase olmadan çalış
+            await loadUnitDetailsOffline();
+        }
     } catch (error) {
         console.error('Sayfa başlatılırken hata:', error);
         debugLog('Sayfa başlatılırken hata:', error);
@@ -143,6 +156,69 @@ function findUnit(unitId) {
         }
     }
     return null;
+}
+
+// Load unit details offline mode
+async function loadUnitDetailsOffline() {
+    debugLog('loadUnitDetailsOffline başladı - Firebase olmadan çalışıyor');
+    
+    try {
+        // Show loading state
+        showLoadingState();
+        
+        // URL'den parametreleri al
+        const urlParams = new URLSearchParams(window.location.search);
+        const galleryId = urlParams.get('galleryId');
+        const unitId = urlParams.get('unitId');
+        
+        debugLog('Galeri ve ünite ID\'leri:', { galleryId, unitId });
+
+        if (!galleryId || !unitId) {
+            throw new Error('Galeri veya ünite bilgisi eksik! Lütfen ana sayfadan bir ünite seçin.');
+        }
+
+        // Offline modda basit bilgiler göster
+        const titleElement = document.getElementById('unitTitle');
+        if (titleElement) {
+            titleElement.textContent = `Ünite ${unitId}`;
+        }
+
+        const galleryNameElement = document.getElementById('galleryName');
+        if (galleryNameElement) {
+            galleryNameElement.innerHTML = `
+                <i class="bi bi-collection me-1"></i>
+                Galeri ${galleryId}
+            `;
+        }
+
+        // Offline mode bilgisi göster
+        const viewMode = document.getElementById('viewMode');
+        if (viewMode) {
+            viewMode.innerHTML = `
+                <div class="alert alert-warning">
+                    <h4><i class="bi bi-wifi-off me-2"></i>Offline Mod</h4>
+                    <p>Firebase bağlantısı kurulamadı. Authentication çalışıyor ancak ünite verileri yüklenemiyor.</p>
+                    <p><strong>URL Parametreleri:</strong></p>
+                    <ul>
+                        <li>Gallery ID: ${galleryId}</li>
+                        <li>Unit ID: ${unitId}</li>
+                    </ul>
+                    <p>Bu sayfa authentication test amacıyla çalışıyor. Gerçek veriler için Firebase bağlantısı gerekli.</p>
+                </div>
+            `;
+        }
+
+        // Hide loading state
+        hideLoadingState();
+
+        debugLog('Offline mod başarıyla yüklendi');
+    } catch (error) {
+        console.error('Offline mod yüklenirken hata:', error);
+        debugLog('Offline mod yüklenirken hata:', error);
+        hideLoadingState();
+        alert(error.message || 'Sayfa yüklenirken bir hata oluştu.');
+        window.location.href = 'index.html';
+    }
 }
 
 // Load unit details
@@ -1847,4 +1923,50 @@ async function uploadDocuments(files) {
     });
 
     return Promise.all(documentPromises);
+} 
+
+// Kullanıcı bilgilerini güncelle
+function updateUserInfo(userData) {
+    const userInfoElement = document.getElementById('userInfo');
+    if (userInfoElement && userData) {
+        const roleText = getRoleText(userData.role);
+        userInfoElement.innerHTML = `
+            <span class="me-2">
+                <i class="bi bi-person-circle me-1"></i>
+                ${userData.name || 'Kullanıcı'}
+            </span>
+            <small class="text-light opacity-75">(${roleText})</small>
+        `;
+    }
+}
+
+// Admin UI'ı güncelle  
+function updateAdminUI(userData) {
+    const adminElements = document.querySelectorAll('.admin-only');
+    const isAdmin = userData && (userData.role === 'admin' || userData.role === 'manager');
+    
+    adminElements.forEach(element => {
+        element.style.display = isAdmin ? '' : 'none';
+    });
+}
+
+// Rol metni al
+function getRoleText(role) {
+    const roleMap = {
+        'admin': 'Yönetici',
+        'manager': 'Müdür', 
+        'technician': 'Teknisyen',
+        'staff': 'Personel'
+    };
+    return roleMap[role] || 'Kullanıcı';
+}
+
+// Çıkış fonksiyonu
+function logout() {
+    // Session storage'ı temizle
+    sessionStorage.removeItem('isAuthenticated');
+    sessionStorage.removeItem('userData');
+    
+    // Login sayfasına yönlendir
+    window.location.href = 'login.html';
 } 

@@ -12,19 +12,18 @@ function galleryDebug(message, data = null) {
 
 // Kullanıcı yetkilerini kontrol et
 function checkUserAccess() {
-    const userRole = sessionStorage.getItem('userRole');
-    const userName = sessionStorage.getItem('userName');
-    const userEmail = sessionStorage.getItem('userEmail');
+    const userData = JSON.parse(sessionStorage.getItem('userData') || '{}');
+    const userRole = userData.role;
 
-    galleryDebug('Kullanıcı yetkileri kontrol ediliyor:', { userRole, userName, userEmail });
+    galleryDebug('Kullanıcı yetkileri kontrol ediliyor:', { userRole, name: userData.name, email: userData.email });
 
-    if (!userRole || !userName || !userEmail) {
+    if (!userRole || !userData.name || !userData.email) {
         galleryDebug('Kullanıcı bilgileri eksik');
         return false;
     }
 
-    // Admin ve supervisor rollerinin galeri düzenleme yetkisi var
-    return ['admin', 'supervisor'].includes(userRole.toLowerCase());
+    // Admin ve manager rollerinin galeri düzenleme yetkisi var
+    return ['admin', 'manager'].includes(userRole.toLowerCase());
 }
 
 // Galeri düzenleme yetkisini kontrol et
@@ -34,7 +33,8 @@ function canEditGallery() {
 
 // Galeri silme yetkisi kontrolü
 function canDeleteGallery() {
-    const userRole = sessionStorage.getItem('userRole');
+    const userData = JSON.parse(sessionStorage.getItem('userData') || '{}');
+    const userRole = userData.role;
     galleryDebug('Galeri silme yetkisi kontrolü:', { userRole });
     return userRole === 'admin';
 }
@@ -110,62 +110,29 @@ document.addEventListener('DOMContentLoaded', async function() {
             throw new Error('Firebase başlatılamadı');
         }
 
-        // Auth state değişikliklerini dinle
-        window.auth.onAuthStateChanged(async (user) => {
-            galleryDebug('Auth state değişti:', user ? user.email : 'oturum kapalı');
+        // Authentication kontrolü
+        const isAuthenticated = sessionStorage.getItem('isAuthenticated') === 'true';
+        if (!isAuthenticated) {
+            galleryDebug('Kullanıcı oturum açmamış');
+            window.location.href = 'login.html';
+            return;
+        }
 
-            if (!user) {
-                galleryDebug('Kullanıcı oturum açmamış');
-                window.location.href = 'login.html';
-                return;
-            }
+        // Kullanıcı bilgilerini al
+        const userData = JSON.parse(sessionStorage.getItem('userData') || '{}');
+        galleryDebug('Kullanıcı oturum açmış:', userData.email);
 
-            // Kullanıcı bilgilerini kontrol et
-            let userRole = sessionStorage.getItem('userRole');
-            let userName = sessionStorage.getItem('userName');
+        // Kullanıcı bilgilerini göster
+        updateUserInfo(userData.name, userData.role);
 
-            if (!userRole || !userName) {
-                try {
-                    // Kullanıcı bilgilerini Firestore'dan al
-                    const userDoc = await window.db.collection('users').doc(user.uid).get();
-                    
-                    if (userDoc.exists) {
-                        const userData = userDoc.data();
-                        userRole = userData.role || 'staff';
-                        userName = userData.name || user.email.split('@')[0];
-                        
-                        sessionStorage.setItem('userRole', userRole);
-                        sessionStorage.setItem('userName', userName);
-                        sessionStorage.setItem('userEmail', user.email);
-                        galleryDebug('Kullanıcı bilgileri Firestore\'dan alındı:', userData);
-                    } else {
-                        // Kullanıcı dokümanı yoksa varsayılan değerler ata
-                        userRole = 'staff';
-                        userName = user.email.split('@')[0];
-                        
-                        sessionStorage.setItem('userRole', userRole);
-                        sessionStorage.setItem('userName', userName);
-                        sessionStorage.setItem('userEmail', user.email);
-                        galleryDebug('Varsayılan kullanıcı bilgileri atandı');
-                    }
-                } catch (error) {
-                    console.error('Kullanıcı bilgileri alınırken hata:', error);
-                    galleryDebug('Kullanıcı bilgileri alınırken hata:', error);
-                }
-            }
+        // Galerileri yükle
+        await loadGalleries();
 
-            // Kullanıcı bilgilerini göster
-            updateUserInfo(userName, userRole);
-
-            // Galerileri yükle
-            await loadGalleries();
-
-            // Admin değilse form alanını gizle
-            const formSection = document.getElementById('formSection');
-            if (formSection && !canEditGallery()) {
-                formSection.style.display = 'none';
-            }
-        });
+        // Admin değilse form alanını gizle
+        const formSection = document.getElementById('formSection');
+        if (formSection && !canEditGallery()) {
+            formSection.style.display = 'none';
+        }
 
         // Yeni galeri ekleme formunu dinle
         const addGalleryForm = document.getElementById('addGalleryForm');
@@ -366,7 +333,10 @@ function displayUnits(units) {
         row.onclick = (e) => {
             if (!e.target.closest('.action-buttons')) {
                 const galleryId = localStorage.getItem('selectedGalleryId');
-                window.location.href = `unit-details.html?galleryId=${galleryId}&unitId=${unit.id}`;
+                const unitId = unit.id;
+                galleryDebug('Ünite detayına yönlendiriliyor:', { galleryId, unitId, unit });
+                console.log('Ünite detayına gidiyor:', `unit-details.html?galleryId=${galleryId}&unitId=${unitId}`);
+                window.location.href = `unit-details.html?galleryId=${galleryId}&unitId=${unitId}`;
             }
         };
         
@@ -787,4 +757,14 @@ async function initializeGalleries() {
 document.addEventListener('DOMContentLoaded', () => {
     checkUserAccess();
     initializeGalleries();
-}); 
+});
+
+// Çıkış fonksiyonu
+function logout() {
+    // Session storage'ı temizle
+    sessionStorage.removeItem('isAuthenticated');
+    sessionStorage.removeItem('userData');
+    
+    // Login sayfasına yönlendir
+    window.location.href = 'login.html';
+} 
