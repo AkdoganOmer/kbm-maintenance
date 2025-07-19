@@ -42,6 +42,11 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             loginDebug('Giriş denemesi başlatıldı:', { username });
 
+            // Firebase bağlantısı kontrol et
+            if (!window.db) {
+                throw new Error('Firebase bağlantısı kurulamadı. Lütfen sistem yöneticisine başvurun.');
+            }
+
             // Personel koleksiyonundan kullanıcıyı bul
             const personnelQuery = await window.db.collection('personnel')
                 .where('username', '==', username)
@@ -70,6 +75,17 @@ document.addEventListener('DOMContentLoaded', () => {
             sessionStorage.setItem('userName', personnelData.name);
             sessionStorage.setItem('userRole', personnelData.role);
             sessionStorage.setItem('userDepartment', personnelData.department || '');
+            
+            // currentUser objesini de kaydet
+            const currentUser = {
+                id: personnelDoc.id,
+                name: personnelData.name,
+                username: personnelData.username,
+                role: personnelData.role,
+                department: personnelData.department || '',
+                password: personnelData.password
+            };
+            sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
 
             loginDebug('Giriş başarılı, session bilgileri kaydedildi');
 

@@ -508,6 +508,39 @@
                         </div>
                     </div>
                 </div>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <div class="card h-100 border-warning stats-card" style="cursor: pointer;" onclick="window.location.href='attendance.html'">
+                            <div class="card-body text-center">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="card-title mb-0">Aylık Katılım</h6>
+                                        <div class="stats-number" id="monthlyAttendance">-</div>
+                                        <small class="text-muted">gün</small>
+                                    </div>
+                                    <div class="icon">
+                                        <i class="bi bi-calendar-check"></i>
+                                    </div>
+                                </div>
+                                <div class="mt-2">
+                                    <small class="text-muted">Teknisyen katılım takibi</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card h-100 border-success">
+                            <div class="card-body text-center">
+                                <i class="bi bi-graph-up-arrow text-success" style="font-size: 3rem;"></i>
+                                <h5 class="card-title mt-3">Performans Analizi</h5>
+                                <p class="card-text text-muted">Bakım performansı ve verimliliği analizi</p>
+                                <button class="btn btn-success" onclick="showPerformanceAnalysis()">
+                                    <i class="bi bi-pie-chart"></i> Analiz Görüntüle
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
