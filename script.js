@@ -116,6 +116,13 @@ function updateAdminUI() {
         });
         console.log('[Admin UI] Admin/Manager butonları gösterildi');
     }
+    
+    // Teknisyen kartlarını kontrol et - HERKES İÇİN GÖSTERİLİYOR
+    const technicianCards = document.querySelectorAll('.technician-card');
+    technicianCards.forEach(card => {
+        card.style.display = 'block'; // Herkes için göster
+    });
+    console.log('[Admin UI] Teknisyen kartları kontrol edildi - HERKES GÖREBİLİR:', userRole);
 }
 
 // Debug fonksiyonu

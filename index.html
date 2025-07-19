@@ -471,6 +471,34 @@
                 </div>
 
             </div>
+            
+            <!-- Puantaj Kartı - Herkese Açık -->
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <div class="card stats-card technician-card" style="cursor: pointer; border: 2px solid #ffc107;" onclick="window.location.href='attendance.html'">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="card-title mb-0 text-warning">
+                                        <i class="bi bi-calendar-check me-2"></i>Aylık Puantaj
+                                    </h6>
+                                    <div class="stats-number text-dark" id="monthlyAttendance">-</div>
+                                    <small class="text-muted">günlük katılım</small>
+                                </div>
+                                <div class="icon">
+                                    <i class="bi bi-person-check text-warning" style="font-size: 2rem;"></i>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <small class="text-muted">Kendi puantaj bilginizi görüntüleyin</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <!-- Boş alan veya gelecekte başka kart -->
+                </div>
+            </div>
         </div>
 
         <!-- Admin Yönetim Paneli -->
@@ -508,39 +536,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="row mt-3">
-                    <div class="col-md-6">
-                        <div class="card h-100 border-warning stats-card" style="cursor: pointer;" onclick="window.location.href='attendance.html'">
-                            <div class="card-body text-center">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <div>
-                                        <h6 class="card-title mb-0">Aylık Katılım</h6>
-                                        <div class="stats-number" id="monthlyAttendance">-</div>
-                                        <small class="text-muted">gün</small>
-                                    </div>
-                                    <div class="icon">
-                                        <i class="bi bi-calendar-check"></i>
-                                    </div>
-                                </div>
-                                <div class="mt-2">
-                                    <small class="text-muted">Teknisyen katılım takibi</small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card h-100 border-success">
-                            <div class="card-body text-center">
-                                <i class="bi bi-graph-up-arrow text-success" style="font-size: 3rem;"></i>
-                                <h5 class="card-title mt-3">Performans Analizi</h5>
-                                <p class="card-text text-muted">Bakım performansı ve verimliliği analizi</p>
-                                <button class="btn btn-success" onclick="showPerformanceAnalysis()">
-                                    <i class="bi bi-pie-chart"></i> Analiz Görüntüle
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+
             </div>
         </div>
 
