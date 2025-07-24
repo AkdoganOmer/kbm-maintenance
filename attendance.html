@@ -44,12 +44,7 @@
              border-color: #dc3545;
          }
          
-         .day-cell.available {
-             background: #ffc107;
-             color: #212529;
-             border-color: #ffc107;
-             font-weight: bold;
-         }
+
         
                  .day-cell.weekend {
              background: #6c757d;
@@ -150,24 +145,20 @@
         <!-- Legend -->
         <div class="card mb-4">
             <div class="card-body">
-                <h6 class="card-title" id="legendTitle">Açıklama:</h6>
-                <div id="legendContent">
-                    <div class="d-flex flex-wrap gap-3">
-                        <span><div class="day-cell d-inline-flex me-1" style="width: 20px; height: 20px; font-size: 0.7rem;">15</div> Çalışma Günü</span>
-                        <span><div class="day-cell available d-inline-flex me-1" style="width: 20px; height: 20px; font-size: 0.7rem;">15</div> <span id="availableText">Müsait</span></span>
-                        <span><div class="day-cell present d-inline-flex me-1" style="width: 20px; height: 20px; font-size: 0.7rem;">15</div> <span id="presentText">Geldi</span></span>
-                        <span><div class="day-cell absent d-inline-flex me-1" style="width: 20px; height: 20px; font-size: 0.7rem;">15</div> <span id="absentText">Gelmedi</span></span>
-                        <span><div class="day-cell holiday d-inline-flex me-1" style="width: 20px; height: 20px; font-size: 0.7rem;">P</div> Pazartesi (Tatil)</span>
-                    </div>
+                <h6 class="card-title">Açıklama:</h6>
+                <div class="d-flex flex-wrap gap-3">
+                    <span><div class="day-cell d-inline-flex me-1" style="width: 20px; height: 20px; font-size: 0.7rem;">15</div> Müsait (Varsayılan)</span>
+                    <span><div class="day-cell absent d-inline-flex me-1" style="width: 20px; height: 20px; font-size: 0.7rem;">15</div> <span id="availableText">Müsait Değil</span></span>
+                    <span><div class="day-cell present d-inline-flex me-1" style="width: 20px; height: 20px; font-size: 0.7rem;">15</div> <span id="presentText">Çalıştı</span></span>
+                    <span><div class="day-cell holiday d-inline-flex me-1" style="width: 20px; height: 20px; font-size: 0.7rem;">P</div> Pazartesi (Tatil)</span>
                 </div>
-                <div id="technicianInstructions" class="mt-3 alert alert-info" style="display: none;">
-                    <i class="bi bi-info-circle"></i>
-                    <strong>Nasıl Kullanılır:</strong> 
-                    <br>• <strong>1. Tık:</strong> Sarı (Müsaitim) - O gün çalışmaya müsaitsiniz
-                    <br>• <strong>2. Tık:</strong> Yeşil (Çalıştım) - O gün gerçekten çalıştınız
-                    <br>• <strong>3. Tık:</strong> Kırmızı (Çalışmadım) - O gün çalışmadınız
-                    <br>• <strong>4. Tık:</strong> İşareti kaldırır (boş bırakır)
-                </div>
+            </div>
+            <div id="technicianInstructions" class="mt-3 alert alert-info" style="display: none;">
+                <i class="bi bi-info-circle"></i>
+                <strong>Nasıl Kullanılır:</strong> 
+                <br>• <strong>1. Tık:</strong> Kırmızı (Müsait Değilim) - O gün çalışamıyorum
+                <br>• <strong>2. Tık:</strong> İşareti kaldırır (Müsaitim) - Varsayılan müsait durum
+                <br><br><strong>Not:</strong> Çalıştığınız günleri yöneticiniz işaretleyecektir.
             </div>
         </div>
 
@@ -329,13 +320,11 @@
         function setupTechnicianInterface() {
             // Ana başlıkları değiştir
             document.getElementById('pageTitle').textContent = 'Aylık Müsaitlik Bildirimi';
-            document.getElementById('pageSubtitle').textContent = 'Müsait olduğunuz günleri işaretleyin - Pazartesi günleri tatil';
+            document.getElementById('pageSubtitle').textContent = 'Müsait olmadığınız günleri işaretleyin - Pazartesi günleri tatil';
             
             // Açıklama başlıkları ve metinleri değiştir
-            document.getElementById('legendTitle').textContent = 'Müsaitlik Durumu Nasıl İşaretlenir:';
-            document.getElementById('availableText').textContent = 'Müsaitim';
-            document.getElementById('presentText').textContent = 'Çalıştım';
-            document.getElementById('absentText').textContent = 'Çalışmadım';
+            document.getElementById('availableText').textContent = 'Müsait Değil';
+            document.getElementById('presentText').textContent = 'Çalıştı (Yönetici İşaretler)';
             document.getElementById('summaryTitle').textContent = 'Müsaitlik Özetim';
             document.getElementById('downloadBtnText').textContent = 'Müsaitlik Raporumu İndir';
             document.getElementById('saveBtnText').textContent = 'Müsaitlik Durumunu Kaydet';
@@ -448,8 +437,27 @@
                  }
              }
             
-                         const totalWorkDays = getWorkDaysInMonth(year, month - 1);
-             const unmarkeDays = totalWorkDays - presentDays - absentDays;
+                                     const totalWorkDays = getWorkDaysInMonth(year, month - 1);
+            const unmarkeDays = totalWorkDays - presentDays - absentDays;
+            const userRole = sessionStorage.getItem('userRole') || '';
+            const currentUserId = sessionStorage.getItem('userId');
+            
+            // Teknisyen ise sadece kendi kartında yeşil badge'ı göster (read-only)
+            let badgesHtml = '';
+            if (userRole === 'technician' && tech.id === currentUserId) {
+                badgesHtml = `
+                    <span class="badge stats-badge bg-danger">${absentDays} Müsait Değilim</span>
+                    <span class="badge stats-badge bg-primary">${unmarkeDays} Müsaitim</span>
+                    ${presentDays > 0 ? `<span class="badge stats-badge bg-success">${presentDays} Çalıştım <small>(Yönetici İşaretledi)</small></span>` : ''}
+                `;
+            } else {
+                badgesHtml = `
+                    <span class="badge stats-badge bg-success">${presentDays} Çalıştı</span>
+                    <span class="badge stats-badge bg-danger">${absentDays} Müsait Değil</span>
+                    <span class="badge stats-badge bg-primary">${unmarkeDays} Müsait</span>
+                    <span class="badge stats-badge bg-warning text-dark">${Math.max(0, 16 - presentDays)} Kalan Gün</span>
+                `;
+            }
             
             card.innerHTML = `
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -457,11 +465,8 @@
                         <h5 class="mb-1">${tech.name}</h5>
                         <small class="text-muted">${tech.department}</small>
                     </div>
-                    <div class="d-flex gap-2">
-                        <span class="badge stats-badge bg-success">${presentDays} Geldi</span>
-                        <span class="badge stats-badge bg-danger">${absentDays} Gelmedi</span>
-                        <span class="badge stats-badge bg-secondary">${unmarkeDays} İşaretlenmemiş</span>
-                                                 <span class="badge stats-badge bg-warning text-dark">${Math.max(0, 16 - presentDays)} Kalan Gün</span>
+                    <div class="d-flex gap-2 flex-wrap">
+                        ${badgesHtml}
                     </div>
                 </div>
                 
@@ -495,8 +500,7 @@
                  } else {
                      // Diğer tüm günler - çalışma günleri (hafta sonu da dahil)
                      const status = attendanceData[techId] && attendanceData[techId][day];
-                     if (status === 'available') cssClass += ' available';
-                     else if (status === 'present') cssClass += ' present';
+                     if (status === 'present') cssClass += ' present';
                      else if (status === 'absent') cssClass += ' absent';
                      
                      clickHandler = `onclick="toggleAttendance('${techId}', ${day})"`;
@@ -526,15 +530,24 @@
             
             const currentStatus = attendanceData[techId][day];
             
-            // Durum geçişleri: boş -> available (sarı) -> present (yeşil) -> absent (kırmızı) -> boş
-            if (!currentStatus) {
-                attendanceData[techId][day] = 'available'; // Müsait
-            } else if (currentStatus === 'available') {
-                attendanceData[techId][day] = 'present'; // Çalıştı
-            } else if (currentStatus === 'present') {
-                attendanceData[techId][day] = 'absent'; // Çalışmadı
+            if (userRole === 'technician') {
+                // Teknisyenler sadece müsait olmadıkları günleri işaretleyebilir
+                // Durum geçişi: boş (müsait) -> absent (müsait değil) -> boş
+                if (!currentStatus) {
+                    attendanceData[techId][day] = 'absent'; // Müsait değil (kırmızı)
+                } else {
+                    delete attendanceData[techId][day]; // Boş (müsait - varsayılan)
+                }
             } else {
-                delete attendanceData[techId][day]; // Boş
+                // Admin/Manager için tam kontrol
+                // Durum geçişleri: boş (müsait) -> absent (müsait değil) -> present (çalıştı) -> boş
+                if (!currentStatus) {
+                    attendanceData[techId][day] = 'absent'; // Müsait değil (kırmızı)
+                } else if (currentStatus === 'absent') {
+                    attendanceData[techId][day] = 'present'; // Çalıştı (yeşil)
+                } else {
+                    delete attendanceData[techId][day]; // Boş (müsait - varsayılan)
+                }
             }
             
             // Sayfayı yenile
@@ -569,21 +582,36 @@
             // Teknisyen ise sadece kendi verilerini hesapla
             if (userRole === 'technician') {
                 const myData = attendanceData[currentUserId] || {};
-                Object.values(myData).forEach(status => {
-                    if (status === 'available') totalAvailable++;
-                    else if (status === 'present') totalPresent++;
-                    else if (status === 'absent') totalAbsent++;
-                });
+                const [year, month] = currentMonth.split('-');
+                const daysInMonth = new Date(year, month, 0).getDate();
+                
+                // Müsait günleri (işaretlenmemiş günleri) say
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dayOfWeek = new Date(year, month - 1, day).getDay();
+                    if (dayOfWeek !== 1) { // Pazartesi hariç
+                        const status = myData[day];
+                        if (!status) totalAvailable++; // Boş = müsait
+                        else if (status === 'present') totalPresent++;
+                        else if (status === 'absent') totalAbsent++;
+                    }
+                }
                 totalTechnicians = 1; // Sadece kendisi
             } else {
                 // Admin/Manager için tüm teknisyenleri hesapla
+                const [year, month] = currentMonth.split('-');
+                const daysInMonth = new Date(year, month, 0).getDate();
+                
                 technicians.forEach(tech => {
                     const techData = attendanceData[tech.id] || {};
-                    Object.values(techData).forEach(status => {
-                        if (status === 'available') totalAvailable++;
-                        else if (status === 'present') totalPresent++;
-                        else if (status === 'absent') totalAbsent++;
-                    });
+                    for (let day = 1; day <= daysInMonth; day++) {
+                        const dayOfWeek = new Date(year, month - 1, day).getDay();
+                        if (dayOfWeek !== 1) { // Pazartesi hariç
+                            const status = techData[day];
+                            if (!status) totalAvailable++; // Boş = müsait
+                            else if (status === 'present') totalPresent++;
+                            else if (status === 'absent') totalAbsent++;
+                        }
+                    }
                 });
             }
             
@@ -595,18 +623,18 @@
             const labels = userRole === 'technician' ? {
                 available: 'Müsait Günlerim',
                 present: 'Çalıştığım Günler',
-                absent: 'Çalışmadığım Günler',
+                absent: 'Müsait Olmadığım Günler',
                 workDays: 'Bu Ay Çalışma Günü'
             } : {
                 available: 'Toplam Müsaitlik',
                 present: 'Toplam Katılım',
-                absent: 'Toplam Devamsızlık',
+                absent: 'Toplam Müsait Olmayanlar',
                 workDays: 'Bu Ay Çalışma Günü'
             };
             
             summaryContainer.innerHTML = `
                 <div class="col-md-3">
-                    <div class="card bg-warning text-dark">
+                    <div class="card bg-primary text-white">
                         <div class="card-body text-center">
                             <h4>${totalAvailable}</h4>
                             <small>${labels.available}</small>
@@ -655,7 +683,7 @@
                               'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
             
             let csvContent = `Teknisyen Müsaitlik ve Katılım Raporu - ${monthNames[month - 1]} ${year}\n\n`;
-            csvContent += 'Teknisyen,Bölüm,Müsait Günler,Çalıştığı Günler,Çalışmadığı Günler,Katılım Oranı\n';
+            csvContent += 'Teknisyen,Bölüm,Müsait Günler,Çalıştığı Günler,Müsait Olmadığı Günler,Katılım Oranı\n';
             
             technicians.forEach(tech => {
                 const techData = attendanceData[tech.id] || {};
@@ -663,11 +691,17 @@
                 let presentDays = 0;
                 let absentDays = 0;
                 
-                Object.values(techData).forEach(status => {
-                    if (status === 'available') availableDays++;
-                    else if (status === 'present') presentDays++;
-                    else if (status === 'absent') absentDays++;
-                });
+                const daysInMonth = new Date(year, month, 0).getDate();
+                
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dayOfWeek = new Date(year, month - 1, day).getDay();
+                    if (dayOfWeek !== 1) { // Pazartesi hariç
+                        const status = techData[day];
+                        if (!status) availableDays++; // Boş = müsait
+                        else if (status === 'present') presentDays++;
+                        else if (status === 'absent') absentDays++;
+                    }
+                }
                 
                 const attendanceRate = presentDays + absentDays > 0 ? 
                     Math.round((presentDays / (presentDays + absentDays)) * 100) : 0;
